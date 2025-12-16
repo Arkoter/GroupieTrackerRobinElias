@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liste des Artiste</title>
+</head>
+<body>
+<h1>Artistes Récupéré</h1>
+
+{{range .}}
+<div style="border: 1px solid gray; margin-bottom: 10px; padding: 10px;">
+    <img src="{{.Image}}" alt="Image de {{.Name}}" style="width: 150px; height: 150px; object-fit: cover;">
+
+    <h2>{{.Name}} ({{.CreationDate}})</h2>
+
+    <p>Nombre de Membres : {{len .Members}}</p>
+
+    <p>Membres :
+        {{range .Members}}
+        <span>{{.}} | </span>
+        {{end}}
+    </p>
+
+    <p>ID API : {{.ID}}</p>
+</div>
+{{end}}
+
+<hr>
+<p><a href="/">Retour à l'Accueil</a></p>
+</body>
+</html>
