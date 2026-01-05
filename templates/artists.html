@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liste des Artistes - Groupie Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .nav-links {
+            margin-top: 20px;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            margin: 0 15px;
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 25px;
+            transition: all 0.3s;
+        }
+
+        .nav-links a:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .artists-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 30px;
+            padding: 20px 0;
+        }
+
+        .artist-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+
+        .artist-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+        }
+
+        .artist-image {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+        }
+
+        .artist-info {
+            padding: 20px;
+        }
+
+        .artist-name {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .artist-details {
+            color: #666;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+
+        .artist-details p {
+            margin: 5px 0;
+        }
+
+        .members-count {
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+
+        .view-details {
+            display: block;
+            text-align: center;
+            margin-top: 15px;
+            padding: 10px;
+            background: #764ba2;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: background 0.3s;
+        }
+
+        .view-details:hover {
+            background: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎵 Liste des Artistes</h1>
+            <div class="nav-links">
+                <a href="/">Accueil</a>
+                <a href="/artists">Artistes</a>
+            </div>
+        </header>
+
+        <div class="artists-grid">
+            {{range .}}
+            <div class="artist-card">
+                <img src="{{.Image}}" alt="{{.Name}}" class="artist-image">
+                <div class="artist-info">
+                    <div class="artist-name">{{.Name}}</div>
+                    <div class="artist-details">
+                        <p><strong>Création:</strong> {{.CreationDate}}</p>
+                        <p><strong>Membres:</strong></p>
+                        <span class="members-count">{{len .Members}} membre(s)</span>
+                    </div>
+                    <a href="/artist/{{.ID}}" class="view-details">Voir les détails →</a>
+                </div>
+            </div>
+            {{end}}
+        </div>
+    </div>
+</body>
+</html>

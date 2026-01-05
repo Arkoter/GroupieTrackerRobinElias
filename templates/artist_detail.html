@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Name}} - Détails</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .nav-bar {
+            background: rgba(255,255,255,0.2);
+            padding: 15px 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-bar a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 25px;
+            transition: all 0.3s;
+        }
+
+        .nav-bar a:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .artist-detail-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .artist-header {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 40px;
+            padding: 40px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+
+        .artist-header img {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .artist-main-info {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .artist-main-info h1 {
+            font-size: 3em;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .info-item {
+            margin: 10px 0;
+            font-size: 1.1em;
+            color: #555;
+        }
+
+        .info-item strong {
+            color: #764ba2;
+        }
+
+        .members-section {
+            padding: 40px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .members-section h2 {
+            color: #764ba2;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+
+        .members-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .member-tag {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .concerts-section {
+            padding: 40px;
+        }
+
+        .concerts-section h2 {
+            color: #764ba2;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+
+        .concert-list {
+            display: grid;
+            gap: 20px;
+        }
+
+        .concert-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 5px solid #667eea;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .concert-item:hover {
+            transform: translateX(10px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .concert-location {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .concert-dates {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .date-badge {
+            background: white;
+            color: #764ba2;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            border: 2px solid #764ba2;
+        }
+
+        @media (max-width: 768px) {
+            .artist-header {
+                grid-template-columns: 1fr;
+            }
+            
+            .artist-header img {
+                height: 300px;
+            }
+            
+            .artist-main-info h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="nav-bar">
+            <div>
+                <a href="/">← Accueil</a>
+                <a href="/artists">← Liste des artistes</a>
+            </div>
+        </div>
+
+        <div class="artist-detail-card">
+            <div class="artist-header">
+                <img src="{{.Image}}" alt="{{.Name}}">
+                <div class="artist-main-info">
+                    <h1>{{.Name}}</h1>
+                    <div class="info-item">
+                        <strong>Année de création:</strong> {{.CreationDate}}
+                    </div>
+                    <div class="info-item">
+                        <strong>Nombre de membres:</strong> {{len .Members}}
+                    </div>
+                </div>
+            </div>
+
+            <div class="members-section">
+                <h2>👥 Membres du groupe</h2>
+                <div class="members-list">
+                    {{range .Members}}
+                    <div class="member-tag">{{.}}</div>
+                    {{end}}
+                </div>
+            </div>
+
+            <div class="concerts-section">
+                <h2>🎤 Concerts</h2>
+                {{if .DatesLocations}}
+                <div class="concert-list">
+                    {{range $location, $dates := .DatesLocations}}
+                    <div class="concert-item">
+                        <div class="concert-location">📍 {{$location}}</div>
+                        <div class="concert-dates">
+                            {{range $dates}}
+                            <span class="date-badge">📅 {{.}}</span>
+                            {{end}}
+                        </div>
+                    </div>
+                    {{end}}
+                </div>
+                {{else}}
+                <p style="color: #999; font-style: italic;">Aucune date de concert disponible pour le moment.</p>
+                {{end}}
+            </div>
+        </div>
+    </div>
+</body>
+</html>
