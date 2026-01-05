@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Liste des Artistes - Groupie Tracker</title>
+
+    <!-- ========== DÉBUT CSS ========== -->
     <style>
         * {
             margin: 0;
@@ -12,7 +14,7 @@
         }
 
         body {
-            font-family: 'Arial', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
@@ -32,7 +34,9 @@
         header h1 {
             font-size: 3em;
             margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            font-weight: 700;
+            letter-spacing: -1px;
         }
 
         .nav-links {
@@ -44,14 +48,17 @@
             text-decoration: none;
             margin: 0 15px;
             padding: 10px 20px;
-            background: rgba(255,255,255,0.2);
+            background: rgba(255, 255, 255, 0.2);
             border-radius: 25px;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            display: inline-block;
         }
 
         .nav-links a:hover {
-            background: rgba(255,255,255,0.3);
+            background: rgba(255, 255, 255, 0.35);
             transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
 
         .artists-grid {
@@ -65,20 +72,21 @@
             background: white;
             border-radius: 15px;
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
             cursor: pointer;
         }
 
         .artist-card:hover {
             transform: translateY(-10px);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
         }
 
         .artist-image {
             width: 100%;
             height: 300px;
             object-fit: cover;
+            display: block;
         }
 
         .artist-info {
@@ -87,9 +95,10 @@
 
         .artist-name {
             font-size: 1.5em;
-            font-weight: bold;
+            font-weight: 700;
             color: #333;
             margin-bottom: 10px;
+            letter-spacing: -0.5px;
         }
 
         .artist-details {
@@ -103,13 +112,14 @@
         }
 
         .members-count {
-            background: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 5px 15px;
             border-radius: 20px;
             display: inline-block;
             margin-top: 10px;
             font-size: 0.9em;
+            font-weight: 500;
         }
 
         .view-details {
@@ -121,40 +131,73 @@
             color: white;
             text-decoration: none;
             border-radius: 8px;
-            transition: background 0.3s;
+            transition: background 0.3s ease, transform 0.2s ease;
+            font-weight: 500;
         }
 
         .view-details:hover {
             background: #667eea;
+            transform: scale(1.02);
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2em;
+            }
+
+            .artists-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+                gap: 20px;
+            }
+
+            .artist-card {
+                margin-bottom: 10px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .artists-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
-</head>
-<body>
-    <div class="container">
-        <header>
-            <h1>🎵 Liste des Artistes</h1>
-            <div class="nav-links">
-                <a href="/">Accueil</a>
-                <a href="/artists">Artistes</a>
-            </div>
-        </header>
 
-        <div class="artists-grid">
-            {{range .}}
-            <div class="artist-card">
-                <img src="{{.Image}}" alt="{{.Name}}" class="artist-image">
-                <div class="artist-info">
-                    <div class="artist-name">{{.Name}}</div>
-                    <div class="artist-details">
-                        <p><strong>Création:</strong> {{.CreationDate}}</p>
-                        <p><strong>Membres:</strong></p>
-                        <span class="members-count">{{len .Members}} membre(s)</span>
-                    </div>
-                    <a href="/artist/{{.ID}}" class="view-details">Voir les détails →</a>
-                </div>
-            </div>
-            {{end}}
+</head>
+
+
+
+
+<body>
+<!-- DEBUT CODE HTML  -->
+
+<div class="container">
+    <!-- EnTete avec titre et navigation -->
+    <header>
+        <h1>🎵 Liste des Artistes</h1>
+        <div class="nav-links">
+            <a href="/">Accueil</a>
+            <a href="/artists">Artistes</a>
         </div>
+    </header>
+
+    <!-- Griye des carte dartiste -->
+    <div class="artists-grid">
+        {{range .}}
+        <div class="artist-card">
+            <img src="{{.Image}}" alt="Photo de {{.Name}}" class="artist-image">
+            <div class="artist-info">
+                <div class="artist-name">{{.Name}}</div>
+                <div class="artist-details">
+                    <p><strong>Création :</strong> {{.CreationDate}}</p>
+                    <p><strong>Membres :</strong></p>
+                    <span class="members-count">{{len .Members}} membre(s)</span>
+                </div>
+                <a href="/artist/{{.ID}}" class="view-details">Voir les détails →</a>
+            </div>
+        </div>
+        {{end}}
     </div>
+</div>
+
 </body>
 </html>
