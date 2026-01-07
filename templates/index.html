@@ -3,10 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Groupie Tracker</title>
+    <title>Groupie Tracker - Accueil</title>
+    
+    <!-- ========== DÉBUT CSS ========== -->
+    <style>
+        /* === Réinitialisation globale === */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* === Style du corps de la page === */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* === Conteneur principal === */
+        .container {
+            text-align: center;
+            color: white;
+        }
+
+        /* === Titre principal === */
+        h1 {
+            font-size: 4em;
+            margin-bottom: 20px;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
+            font-weight: 700;
+            letter-spacing: -2px;
+        }
+
+        /* === Paragraphe de description === */
+        p {
+            font-size: 1.5em;
+            margin-bottom: 40px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            font-weight: 300;
+            line-height: 1.6;
+        }
+
+        /* === Bouton d'action === */
+        .button {
+            display: inline-block;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            color: white;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid white;
+            border-radius: 50px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            margin: 10px;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+        }
+
+        .button:hover {
+            background: white;
+            color: #764ba2;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        /* === Responsive Design pour mobiles === */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5em;
+            }
+
+            p {
+                font-size: 1.2em;
+            }
+
+            .button {
+                font-size: 1em;
+                padding: 12px 30px;
+            }
+        }
+    </style>
+    <!-- ========== FIN CSS ========== -->
+    
 </head>
 <body>
-<h1>Projet Groupie Tracker</h1>
-<p>ertyuiozekfpakf</p>
+    <!-- ========== DÉBUT CODE HTML ========== -->
+    
+    <div class="container">
+        <h1>🎸 Projet Groupie Tracker</h1>
+        <p>Bienvenue sur le site de suivi des artistes et de leurs concerts</p>
+        <a href="/artists" class="button">Voir les Artistes</a>
+    </div>
+    
+    <!-- ========== FIN CODE HTML ========== -->
 </body>
 </html>

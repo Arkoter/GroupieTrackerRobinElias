@@ -11,6 +11,7 @@ type Artist struct {
 	Image        string   `json:"image"`
 	Name         string   `json:"name"`
 	CreationDate int      `json:"creationDate"`
+	FirstAlbum   string   `json:"firstAlbum"`
 	Members      []string `json:"members"`
 }
 
@@ -52,7 +53,7 @@ func FetchArtists() []Artist {
 }
 
 func FetchArtistDetail(id int) *ArtistDetail {
-	// Récupairer lartist de base
+	// Récupérer l'artiste de base
 	artists := FetchArtists()
 	var artist Artist
 	found := false
@@ -67,7 +68,7 @@ func FetchArtistDetail(id int) *ArtistDetail {
 		return nil
 	}
 
-	// Récup les locations
+	// Récup les location
 	locResp, err := http.Get(fmt.Sprintf("%s/%d", locationsAPI, id))
 	if err != nil {
 		return nil
@@ -87,7 +88,7 @@ func FetchArtistDetail(id int) *ArtistDetail {
 	var dates Dates
 	json.NewDecoder(dateResp.Body).Decode(&dates)
 
-	// Récup les relations
+	// Récup les relations (dates-locations)
 	relResp, err := http.Get(fmt.Sprintf("%s/%d", relationAPI, id))
 	if err != nil {
 		return nil
@@ -99,7 +100,7 @@ func FetchArtistDetail(id int) *ArtistDetail {
 
 	return &ArtistDetail{
 		Artist:         artist,
-		FirstAlbum:     "",
+		FirstAlbum:     artist.FirstAlbum,
 		Locations:      locations.Locations,
 		Dates:          dates.Dates,
 		DatesLocations: relation.DatesLocations,

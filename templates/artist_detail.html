@@ -4,16 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{.Name}} - Détails</title>
-
-    <!--  DEBUT CSS  -->
+    
+    <!-- ========== DÉBUT CSS ========== -->
     <style>
-
+        /* === Réinitialisation globale === */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
+        /* === Style du corps de la page === */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -22,13 +23,13 @@
             color: #333;
         }
 
-
+        /* === Conteneur principal === */
         .container {
             max-width: 1200px;
             margin: 0 auto;
         }
 
-
+        /* === Barre de navigation === */
         .nav-bar {
             background: rgba(255, 255, 255, 0.2);
             padding: 15px 30px;
@@ -56,6 +57,7 @@
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
 
+        /* === Carte de détails de l'artiste === */
         .artist-detail-card {
             background: white;
             border-radius: 20px;
@@ -63,6 +65,7 @@
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
         }
 
+        /* === En-tête avec image et informations principales === */
         .artist-header {
             display: grid;
             grid-template-columns: 400px 1fr;
@@ -79,6 +82,7 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         }
 
+        /* === Informations principales de l'artiste === */
         .artist-main-info {
             display: flex;
             flex-direction: column;
@@ -105,6 +109,7 @@
             font-weight: 600;
         }
 
+        /* === Section des membres === */
         .members-section {
             padding: 40px;
             border-bottom: 2px solid #f0f0f0;
@@ -139,6 +144,7 @@
             box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
         }
 
+        /* === Section des concerts === */
         .concerts-section {
             padding: 40px;
         }
@@ -155,6 +161,7 @@
             gap: 20px;
         }
 
+        /* === Élément de concert individuel === */
         .concert-item {
             background: #f8f9fa;
             padding: 20px;
@@ -175,6 +182,7 @@
             margin-bottom: 10px;
         }
 
+        /* === Dates des concerts === */
         .concert-dates {
             display: flex;
             flex-wrap: wrap;
@@ -199,6 +207,7 @@
             transform: scale(1.05);
         }
 
+        /* === Message si aucun concert === */
         .no-concerts {
             color: #999;
             font-style: italic;
@@ -207,16 +216,17 @@
             font-size: 1.1em;
         }
 
+        /* === Responsive Design pour tablettes et mobiles === */
         @media (max-width: 768px) {
             .artist-header {
                 grid-template-columns: 1fr;
                 padding: 20px;
             }
-
+            
             .artist-header img {
                 height: 300px;
             }
-
+            
             .artist-main-info h1 {
                 font-size: 2em;
             }
@@ -231,70 +241,72 @@
             }
         }
     </style>
-
-
+    <!-- ========== FIN CSS ========== -->
+    
 </head>
 <body>
-<!-- ========== DeBUT CODE HTML ========== -->
-
-<div class="container">
-    <!-- Barre de navigation -->
-    <div class="nav-bar">
-        <div>
-            <a href="/">← Accueil</a>
-            <a href="/artists">← Liste des artiste</a>
-        </div>
-    </div>
-
-    <!-- Carte principale de lartiste -->
-    <div class="artist-detail-card">
-
-        <!-- entete avec image et info prinsipales -->
-        <div class="artist-header">
-            <img src="{{.Image}}" alt="Photo de {{.Name}}">
-            <div class="artist-main-info">
-                <h1>{{.Name}}</h1>
-                <div class="info-item">
-                    <strong>Annee de creation :</strong> {{.CreationDate}}
-                </div>
-                <div class="info-item">
-                    <strong>Nombres de membre :</strong> {{len .Members}}
-                </div>
+    <!-- ========== DeBUT CODE HTML ========== -->
+    
+    <div class="container">
+        <!-- Barre de navig. -->
+        <div class="nav-bar">
+            <div>
+                <a href="/">← Accueil</a>
+                <a href="/artists">← Liste des artistes</a>
             </div>
         </div>
 
-        <!-- Secsion des membres du groupe -->
-        <div class="members-section">
-            <h2>👥 Membre du groupe</h2>
-            <div class="members-list">
-                {{range .Members}}
-                <div class="member-tag">{{.}}</div>
-                {{end}}
-            </div>
-        </div>
-
-        <!-- Secsion des concert -->
-        <div class="concerts-section">
-            <h2>🎤 Concert</h2>
-            {{if .DatesLocations}}
-            <div class="concert-list">
-                {{range $location, $dates := .DatesLocations}}
-                <div class="concert-item">
-                    <div class="concert-location">📍 {{$location}}</div>
-                    <div class="concert-dates">
-                        {{range $dates}}
-                        <span class="date-badge">📅 {{.}}</span>
-                        {{end}}
+        <div class="artist-detail-card">
+            
+            <div class="artist-header">
+                <img src="{{.Image}}" alt="Photo de {{.Name}}">
+                <div class="artist-main-info">
+                    <h1>{{.Name}}</h1>
+                    <div class="info-item">
+                        <strong>Année de création :</strong> {{.CreationDate}}
+                    </div>
+                    <div class="info-item">
+                        <strong>Premier album :</strong> {{.FirstAlbum}}
+                    </div>
+                    <div class="info-item">
+                        <strong>Nombre de membres :</strong> {{len .Members}}
                     </div>
                 </div>
+            </div>
+
+            <!-- Section de membre du groupe -->
+            <div class="members-section">
+                <h2>👥 Membres du groupe</h2>
+                <div class="members-list">
+                    {{range .Members}}
+                    <div class="member-tag">{{.}}</div>
+                    {{end}}
+                </div>
+            </div>
+
+            <!-- Section des concairt -->
+            <div class="concerts-section">
+                <h2>🎤 Concerts</h2>
+                {{if .DatesLocations}}
+                <div class="concert-list">
+                    {{range $location, $dates := .DatesLocations}}
+                    <div class="concert-item">
+                        <div class="concert-location">📍 {{$location}}</div>
+                        <div class="concert-dates">
+                            {{range $dates}}
+                            <span class="date-badge">📅 {{.}}</span>
+                            {{end}}
+                        </div>
+                    </div>
+                    {{end}}
+                </div>
+                {{else}}
+                <p class="no-concerts">Aucune date de concert disponible pour le moment.</p>
                 {{end}}
             </div>
-            {{else}}
-            <p class="no-concerts">Aucune date de concert disponible pour le moment.</p>
-            {{end}}
         </div>
     </div>
-</div>
-
+    
+    <!-- ========== FIN CODE HTML ========== -->
 </body>
 </html>
