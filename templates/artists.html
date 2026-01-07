@@ -252,14 +252,18 @@
             
             <!-- Barre de recherche -->
             <div class="search-container">
+                <!--jai créé un formulaire HTML simple avec method="GET" qui envoie les données dans l'URL.  -->
+
                 <form action="/search" method="GET" class="search-form">
                     <input 
-                        type="text" 
+                        type="text"
+                    <!--L'attribut name="query" definit le nom du paramètre dans lURl -->
                         name="query" 
                         placeholder="Rechercher un artiste, un membre..." 
                         class="search-input"
                         required
                     >
+                    <!--tout est géré par le navigateur et le serveur oas dejavascript utiliser ici-->
                     <button type="submit" class="search-button">🔍 Rechercher</button>
                 </form>
             </div>

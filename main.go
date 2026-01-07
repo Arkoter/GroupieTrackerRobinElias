@@ -58,6 +58,7 @@ func artistDetailHandler(w http.ResponseWriter, r *http.Request) {
 
 // (Partie 4)
 func searchHandler(w http.ResponseWriter, r *http.Request) {
+	//je recup le paramatre avec r.URL.Query().Get("query") et je le passe en minuscule en faisan strings.ToLower
 	query := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("query")))
 
 	if query == "" {
@@ -70,8 +71,11 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Filtrer les artistes selon la recherche
 	var results []api.Artist
+
+	//je parcours tout les artiste
 	for _, artist := range allArtists {
 		// Recherche par nom d'artiste
+		//je verif si le nom de lartiste contient la recherche en utilisant string.cotnains
 		if strings.Contains(strings.ToLower(artist.Name), query) {
 			results = append(results, artist)
 			continue
@@ -79,6 +83,7 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Recherche par membre
 		for _, member := range artist.Members {
+			//je verif si un des membres contient la recherche en utilisant string.cotnains
 			if strings.Contains(strings.ToLower(member), query) {
 				results = append(results, artist)
 				break
