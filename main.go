@@ -111,7 +111,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 func artistsHandler(w http.ResponseWriter, r *http.Request) {
 	artists := FetchArtists()
 	if artists == nil {
-		http.Error(w, "Impossible de recuperer les artistes.", http.StatusInternalServerError)
+		http.Error(w, "Impossible de recuperer les artistes", http.StatusInternalServerError)
 		return
 	}
 
@@ -163,7 +163,7 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 
 	allArtists := FetchArtists()
 	if allArtists == nil {
-		http.Error(w, "Impossible de recuperer les artistes.", http.StatusInternalServerError)
+		http.Error(w, "Impossible de recuperer les artistes", http.StatusInternalServerError)
 		return
 	}
 
@@ -200,11 +200,104 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 	_ = tmpl.Execute(w, data)
 }
 
+func filterHandler(w http.ResponseWriter, r *http.Request) {
+	allArtists := FetchArtists()
+	if allArtists == nil {
+		http.Error(w, "Impossible de recuperer les artistes", http.StatusInternalServerError)
+		return
+	}
+
+	yearStr := r.URL.Query().Get("year")
+	decadeStr := r.URL.Query().Get("decade")
+	membersStr := r.URL.Query().Get("members")
+
+	yearActive := yearStr != ""
+	decadeActive := decadeStr != ""
+	membersActive := membersStr != ""
+
+	if !yearActive && !decadeActive && !membersActive {
+		tmpl, err := template.ParseFiles("templates/artists.html")
+		if err != nil {
+			http.Error(w, "Erreur de template", http.StatusInternalServerError)
+			return
+		}
+		_ = tmpl.Execute(w, allArtists)
+		return
+	}
+
+	var year int
+	var decade int
+	var members int
+	var membersAtLeastFive bool
+
+	if yearActive {
+		v, err := strconv.Atoi(yearStr)
+		if err != nil {
+			http.Error(w, "Parametre year invalide", http.StatusBadRequest)
+			return
+		}
+		year = v
+	}
+
+	if decadeActive {
+		v, err := strconv.Atoi(decadeStr)
+		if err != nil {
+			http.Error(w, "Parametre decade invalide", http.StatusBadRequest)
+			return
+		}
+		decade = v
+	}
+
+	if membersActive {
+		if membersStr == "5+" {
+			membersAtLeastFive = true
+		} else {
+			v, err := strconv.Atoi(membersStr)
+			if err != nil {
+				http.Error(w, "Parametre members invalide", http.StatusBadRequest)
+				return
+			}
+			members = v
+		}
+	}
+
+	var filtered []Artist
+	for _, artist := range allArtists {
+		if yearActive && artist.CreationDate != year {
+			continue
+		}
+		if decadeActive && !(artist.CreationDate >= decade && artist.CreationDate < decade+10) {
+			continue
+		}
+		if membersActive {
+			if membersAtLeastFive {
+				if len(artist.Members) < 5 {
+					continue
+				}
+			} else if len(artist.Members) != members {
+				continue
+			}
+		}
+		filtered = append(filtered, artist)
+	}
+
+	tmpl, err := template.ParseFiles("templates/artists.html")
+	if err != nil {
+		http.Error(w, "Erreur de template", http.StatusInternalServerError)
+		return
+	}
+
+	_ = tmpl.Execute(w, filtered)
+}
+
 func main() {
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/artists", artistsHandler)
 	http.HandleFunc("/artist/", artistDetailHandler)
 	http.HandleFunc("/search", searchHandler)
+	http.HandleFunc("/filter", filterHandler)
+
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	_ = http.ListenAndServe(":8080", nil)
 }

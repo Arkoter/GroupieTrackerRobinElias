@@ -1,0 +1,658 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+}
+
+.container {
+    margin: 0 auto;
+}
+
+.nav-links a,
+.quick-filter-link,
+.page-detail .nav-bar a,
+.page-home .button,
+.page-artists .search-button,
+.page-artists .filter-button,
+.page-search .nav-links a {
+    transition: all 0.3s ease;
+}
+
+.page-home {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.page-home .container {
+    text-align: center;
+    color: white;
+    max-width: 1200px;
+}
+
+.page-home h1 {
+    font-size: 4em;
+    margin-bottom: 20px;
+    text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
+    font-weight: 700;
+    letter-spacing: -2px;
+}
+
+.page-home p {
+    font-size: 1.5em;
+    margin-bottom: 40px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    font-weight: 300;
+    line-height: 1.6;
+}
+
+.page-home .button {
+    display: inline-block;
+    padding: 15px 40px;
+    font-size: 1.2em;
+    color: white;
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid white;
+    border-radius: 50px;
+    text-decoration: none;
+    margin: 10px;
+    font-weight: 500;
+    backdrop-filter: blur(10px);
+}
+
+.page-home .button:hover {
+    background: white;
+    color: #764ba2;
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}
+
+.page-artists {
+    padding: 20px;
+}
+
+.page-artists .container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.page-artists header {
+    text-align: center;
+    color: white;
+    margin-bottom: 40px;
+}
+
+.page-artists header h1 {
+    font-size: 3em;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    font-weight: 700;
+    letter-spacing: -1px;
+}
+
+.page-artists .nav-links {
+    margin-top: 20px;
+}
+
+.page-artists .nav-links a {
+    color: white;
+    text-decoration: none;
+    margin: 0 15px;
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 25px;
+    font-weight: 500;
+    display: inline-block;
+}
+
+.page-artists .nav-links a:hover {
+    background: rgba(255, 255, 255, 0.35);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.page-artists .filters-section {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 30px;
+    margin-bottom: 30px;
+}
+
+.page-artists .filters-title {
+    color: white;
+    font-size: 1.5em;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.page-artists .filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.page-artists .search-container {
+    margin-top: 20px;
+}
+
+.page-artists .search-form {
+    display: flex;
+    gap: 10px;
+}
+
+.page-artists .search-input {
+    flex: 1;
+    padding: 12px 20px;
+    font-size: 1em;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-radius: 25px;
+    background: rgba(255, 255, 255, 0.9);
+    color: #333;
+    outline: none;
+}
+
+.page-artists .search-input:focus {
+    background: white;
+    border-color: white;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+}
+
+.page-artists .search-button {
+    padding: 12px 30px;
+    font-size: 1em;
+    background: white;
+    color: #764ba2;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.page-artists .search-button:hover {
+    background: #764ba2;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.page-artists .filter-form {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 15px;
+    border-radius: 15px;
+}
+
+.page-artists .filter-label {
+    display: block;
+    color: white;
+    font-weight: 500;
+    margin-bottom: 10px;
+}
+
+.page-artists .filter-input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 10px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.9);
+    font-size: 1em;
+}
+
+.page-artists .filter-button {
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px;
+    background: white;
+    color: #764ba2;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.page-artists .filter-button:hover {
+    background: #764ba2;
+    color: white;
+}
+
+.page-artists .quick-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.page-artists .quick-filter-link {
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    text-decoration: none;
+    border-radius: 20px;
+    font-size: 0.9em;
+}
+
+.page-artists .quick-filter-link:hover {
+    background: white;
+    color: #764ba2;
+    transform: translateY(-2px);
+}
+
+.page-artists .artists-grid,
+.page-search .artists-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 30px;
+    padding: 20px 0;
+}
+
+.page-artists .artist-card,
+.page-search .artist-card {
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.page-artists .artist-card:hover,
+.page-search .artist-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+}
+
+.page-artists .artist-image,
+.page-search .artist-image {
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+    display: block;
+}
+
+.page-artists .artist-info,
+.page-search .artist-info {
+    padding: 20px;
+}
+
+.page-artists .artist-name,
+.page-search .artist-name {
+    font-size: 1.5em;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 10px;
+    letter-spacing: -0.5px;
+}
+
+.page-artists .artist-details,
+.page-search .artist-details {
+    color: #666;
+    font-size: 0.95em;
+    line-height: 1.6;
+}
+
+.page-artists .artist-details p,
+.page-search .artist-details p {
+    margin: 5px 0;
+}
+
+.page-artists .members-count,
+.page-search .members-count {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 5px 15px;
+    border-radius: 20px;
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 0.9em;
+    font-weight: 500;
+}
+
+.page-artists .view-details,
+.page-search .view-details {
+    display: block;
+    text-align: center;
+    margin-top: 15px;
+    padding: 10px;
+    background: #764ba2;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+.page-artists .view-details:hover,
+.page-search .view-details:hover {
+    background: #667eea;
+    transform: scale(1.02);
+}
+
+.page-artists .no-artists,
+.page-search .no-artists {
+    text-align: center;
+    color: white;
+    font-size: 1.5em;
+    margin: 100px 0;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 40px;
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+}
+
+.page-search {
+    padding: 20px;
+}
+
+.page-search .container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.page-search header {
+    text-align: center;
+    color: white;
+    margin-bottom: 30px;
+}
+
+.page-search header h1 {
+    font-size: 2.6em;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    font-weight: 700;
+    letter-spacing: -1px;
+}
+
+.page-search .nav-links {
+    margin-top: 10px;
+}
+
+.page-search .nav-links a {
+    color: white;
+    text-decoration: none;
+    margin: 0 12px;
+    padding: 10px 18px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 25px;
+    font-weight: 500;
+    display: inline-block;
+}
+
+.page-search .nav-links a:hover {
+    background: rgba(255, 255, 255, 0.35);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.page-search .search-summary {
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    border-radius: 18px;
+    padding: 18px 22px;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+}
+
+.page-search .search-query,
+.page-search .search-count {
+    font-size: 1.05em;
+}
+
+.page-detail {
+    padding: 20px;
+    color: #333;
+}
+
+.page-detail .container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.page-detail .nav-bar {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 15px 30px;
+    border-radius: 15px;
+    margin-bottom: 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    backdrop-filter: blur(10px);
+}
+
+.page-detail .nav-bar a {
+    color: #fff;
+    text-decoration: none;
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 25px;
+    font-weight: 500;
+    display: inline-block;
+}
+
+.page-detail .nav-bar a:hover {
+    background: rgba(255, 255, 255, 0.35);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.page-detail .artist-detail-card {
+    background: #fff;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.page-detail .artist-header {
+    display: grid;
+    grid-template-columns: 400px 1fr;
+    gap: 40px;
+    padding: 40px;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.page-detail .artist-header img {
+    width: 100%;
+    height: 400px;
+    object-fit: cover;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.page-detail .artist-main-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.page-detail .artist-main-info h1 {
+    font-size: 3em;
+    color: #333;
+    margin-bottom: 20px;
+    font-weight: 700;
+    letter-spacing: -1px;
+}
+
+.page-detail .info-item {
+    margin: 10px 0;
+    font-size: 1.1em;
+    color: #555;
+    line-height: 1.6;
+}
+
+.page-detail .info-item strong {
+    color: #764ba2;
+    font-weight: 600;
+}
+
+.page-detail .members-section {
+    padding: 40px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.page-detail .members-section h2 {
+    color: #764ba2;
+    margin-bottom: 20px;
+    font-size: 2em;
+    font-weight: 600;
+}
+
+.page-detail .members-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.page-detail .member-tag {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    padding: 12px 25px;
+    border-radius: 25px;
+    font-size: 1.1em;
+    font-weight: 500;
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+}
+
+.page-detail .member-tag:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+.page-detail .concerts-section {
+    padding: 40px;
+}
+
+.page-detail .concerts-section h2 {
+    color: #764ba2;
+    margin-bottom: 30px;
+    font-size: 2em;
+    font-weight: 600;
+}
+
+.page-detail .concert-list {
+    display: grid;
+    gap: 20px;
+}
+
+.page-detail .concert-item {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 12px;
+    border-left: 5px solid #667eea;
+}
+
+.page-detail .concert-item:hover {
+    transform: translateX(10px);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+}
+
+.page-detail .concert-location {
+    font-size: 1.3em;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.page-detail .concert-dates {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.page-detail .date-badge {
+    background: #fff;
+    color: #764ba2;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 0.9em;
+    border: 2px solid #764ba2;
+    font-weight: 500;
+}
+
+.page-detail .date-badge:hover {
+    background: #764ba2;
+    color: #fff;
+    transform: scale(1.05);
+}
+
+.page-detail .no-concerts {
+    color: #999;
+    font-style: italic;
+    text-align: center;
+    padding: 20px;
+    font-size: 1.1em;
+}
+
+@media (max-width: 768px) {
+    .page-home h1 {
+        font-size: 2.5em;
+    }
+
+    .page-home p {
+        font-size: 1.2em;
+    }
+
+    .page-home .button {
+        font-size: 1em;
+        padding: 12px 30px;
+    }
+
+    .page-artists header h1 {
+        font-size: 2em;
+    }
+
+    .page-artists .filters-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .page-artists .search-form {
+        flex-direction: column;
+    }
+
+    .page-artists .artists-grid,
+    .page-search .artists-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 20px;
+    }
+
+    .page-search header h1 {
+        font-size: 2em;
+    }
+
+    .page-search .search-summary {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .page-detail .artist-header {
+        grid-template-columns: 1fr;
+        padding: 20px;
+    }
+
+    .page-detail .artist-header img {
+        height: 300px;
+    }
+
+    .page-detail .artist-main-info h1 {
+        font-size: 2em;
+    }
+
+    .page-detail .members-section,
+    .page-detail .concerts-section {
+        padding: 20px;
+    }
+
+    .page-detail .concert-item {
+        padding: 15px;
+    }
+}
