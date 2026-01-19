@@ -4,31 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Liste des Artistes - Groupie Tracker</title>
-    
-    <!-- ========== DÉBUT CSS ========== -->
+
     <style>
-        /* === Réinitialisation globale === */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
-        /* === Style du corps de la page === */
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
         }
 
-        /* === Conteneur principal === */
         .container {
             max-width: 1400px;
             margin: 0 auto;
         }
 
-        /* === En-tête de la page === */
         header {
             text-align: center;
             color: white;
@@ -43,7 +38,6 @@
             letter-spacing: -1px;
         }
 
-        /* === Liens de navigation === */
         .nav-links {
             margin-top: 20px;
         }
@@ -66,7 +60,6 @@
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
 
-        /* === Barre de recherche === */
         .search-container {
             margin-top: 30px;
         }
@@ -97,10 +90,6 @@
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
         }
 
-        .search-input::placeholder {
-            color: #999;
-        }
-
         .search-button {
             padding: 12px 30px;
             font-size: 1em;
@@ -120,7 +109,6 @@
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
         }
 
-        /* === Grille desartiste === */
         .artists-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -128,14 +116,12 @@
             padding: 20px 0;
         }
 
-        /* === Carte dartist individueles === */
         .artist-card {
             background: white;
             border-radius: 15px;
             overflow: hidden;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
-            cursor: pointer;
         }
 
         .artist-card:hover {
@@ -143,7 +129,6 @@
             box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
         }
 
-        /* === Image de lartist === */
         .artist-image {
             width: 100%;
             height: 300px;
@@ -151,7 +136,6 @@
             display: block;
         }
 
-        /* === Information de lartist === */
         .artist-info {
             padding: 20px;
         }
@@ -161,7 +145,6 @@
             font-weight: 700;
             color: #333;
             margin-bottom: 10px;
-            letter-spacing: -0.5px;
         }
 
         .artist-details {
@@ -170,11 +153,6 @@
             line-height: 1.6;
         }
 
-        .artist-details p {
-            margin: 5px 0;
-        }
-
-        /* === Badge du nombre de membres === */
         .members-count {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -186,7 +164,6 @@
             font-weight: 500;
         }
 
-        /* === Bouton voir détails === */
         .view-details {
             display: block;
             text-align: center;
@@ -205,7 +182,17 @@
             transform: scale(1.02);
         }
 
-        /* === Responsive Design pour tablettes et mobiles === */
+        .no-artists {
+            text-align: center;
+            color: white;
+            font-size: 1.5em;
+            margin: 100px 0;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 40px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+
         @media (max-width: 768px) {
             header h1 {
                 font-size: 2em;
@@ -219,75 +206,52 @@
             .search-button {
                 width: 100%;
             }
-
-            .artists-grid {
-                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-                gap: 20px;
-            }
-
-            .artist-card {
-                margin-bottom: 10px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .artists-grid {
-                grid-template-columns: 1fr;
-            }
         }
     </style>
-    <!-- ========== FIN CSS ========== -->
-    
 </head>
+
 <body>
-    <!-- ========== DÉBUT CODE HTML ========== -->
-    
-    <div class="container">
-        <header>
-            <h1>🎵 Liste des Artistes</h1>
-            <div class="nav-links">
-                <a href="/">Accueil</a>
-                <a href="/artists">Artistes</a>
-            </div>
-            
-            <!-- Barre de recherche -->
-            <div class="search-container">
-                <!--jai créé un formulaire HTML simple avec method="GET" qui envoie les données dans l'URL.  -->
 
-                <form action="/search" method="GET" class="search-form">
-                    <input 
-                        type="text"
-                    <!--L'attribut name="query" definit le nom du paramètre dans lURl -->
-                        name="query" 
-                        placeholder="Rechercher un artiste, un membre..." 
-                        class="search-input"
-                        required
-                    >
-                    <!--tout est géré par le navigateur et le serveur oas dejavascript utiliser ici-->
-                    <button type="submit" class="search-button">🔍 Rechercher</button>
-                </form>
-            </div>
-        </header>
+<!-- ====================== HTML ====================== -->
 
-        <!-- Grille des cartes dartiste -->
-        <div class="artists-grid">
-            {{range .}}
-            <div class="artist-card">
-                <img src="{{.Image}}" alt="Photo de {{.Name}}" class="artist-image">
-                <div class="artist-info">
-                    <div class="artist-name">{{.Name}}</div>
-                    <div class="artist-details">
-                        <p><strong>Création :</strong> {{.CreationDate}}</p>
-                        <p><strong>Membres :</strong></p>
-                        <span class="members-count">{{len .Members}} membre(s)</span>
-                    </div>
-                    <a href="/artist/{{.ID}}" class="view-details">Voir les détails →</a>
-                </div>
-            </div>
-            {{end}}
+<div class="container">
+    <header>
+        <h1>Liste des Artistes</h1>
+        <div class="nav-links">
+            <a href="/">Accueil</a>
+            <a href="/artists">Artistes</a>
         </div>
+
+        <div class="search-container">
+            <form action="/search" method="GET" class="search-form">
+                <input type="text" name="query" placeholder="Rechercher un artiste ou un membre" class="search-input" required>
+                <button type="submit" class="search-button">Rechercher</button>
+            </form>
+        </div>
+    </header>
+
+    {{if .}}
+    <div class="artists-grid">
+        {{range .}}
+        <div class="artist-card">
+            <img src="{{.Image}}" alt="{{.Name}}" class="artist-image">
+            <div class="artist-info">
+                <div class="artist-name">{{.Name}}</div>
+                <div class="artist-details">
+                    <p><strong>Création :</strong> {{.CreationDate}}</p>
+                    <span class="members-count">{{len .Members}} membre(s)</span>
+                </div>
+                <a href="/artist/{{.ID}}" class="view-details">Voir les détails</a>
+            </div>
+        </div>
+        {{end}}
     </div>
-    
-    <!-- ========== FIN CODE HTML ========== -->
+    {{else}}
+    <div class="no-artists">
+        <p>Aucun artiste trouvé</p>
+    </div>
+    {{end}}
+</div>
+
 </body>
 </html>

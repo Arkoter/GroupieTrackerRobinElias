@@ -1,35 +1,131 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"net/http"
 	"strconv"
 	"strings"
-
-	"groupie-tracker/api"
 )
 
-func indexHandler(w http.ResponseWriter, r *http.Request) {
-	tmpl, _ := template.ParseFiles("templates/index.html")
-	tmpl.Execute(w, nil)
+type Artist struct {
+	ID           int      `json:"id"`
+	Image        string   `json:"image"`
+	Name         string   `json:"name"`
+	CreationDate int      `json:"creationDate"`
+	FirstAlbum   string   `json:"firstAlbum"`
+	Members      []string `json:"members"`
 }
 
-// (Partie 2)
+type Relation struct {
+	DatesLocations map[string][]string `json:"datesLocations"`
+}
+
+type ArtistDetail struct {
+	Artist
+	DatesLocations map[string][]string
+}
+
+const (
+	artistsAPI  = "https://groupietrackers.herokuapp.com/api/artists"
+	relationAPI = "https://groupietrackers.herokuapp.com/api/relation"
+)
+
+func FetchArtists() []Artist {
+	resp, err := http.Get(artistsAPI)
+	if err != nil {
+		return nil
+	}
+	defer resp.Body.Close()
+
+	var artists []Artist
+	if err := json.NewDecoder(resp.Body).Decode(&artists); err != nil {
+		return nil
+	}
+	return artists
+}
+
+func FetchArtistDetail(id int) *ArtistDetail {
+	artists := FetchArtists()
+	if artists == nil {
+		return nil
+	}
+
+	var artist Artist
+	found := false
+	for _, a := range artists {
+		if a.ID == id {
+			artist = a
+			found = true
+			break
+		}
+	}
+	if !found {
+		return nil
+	}
+
+	relURL := fmt.Sprintf("%s/%d", relationAPI, id)
+	relResp, err := http.Get(relURL)
+	if err != nil {
+		return &ArtistDetail{
+			Artist:         artist,
+			DatesLocations: map[string][]string{},
+		}
+	}
+	defer relResp.Body.Close()
+
+	var relation Relation
+	if err := json.NewDecoder(relResp.Body).Decode(&relation); err != nil {
+		return &ArtistDetail{
+			Artist:         artist,
+			DatesLocations: map[string][]string{},
+		}
+	}
+
+	if relation.DatesLocations == nil {
+		relation.DatesLocations = map[string][]string{}
+	}
+
+	return &ArtistDetail{
+		Artist:         artist,
+		DatesLocations: relation.DatesLocations,
+	}
+}
+
+func indexHandler(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" {
+		http.Redirect(w, r, "/artists", http.StatusSeeOther)
+		return
+	}
+
+	tmpl, err := template.ParseFiles("templates/index.html")
+	if err != nil {
+		http.Error(w, "Erreur de template", http.StatusInternalServerError)
+		return
+	}
+
+	_ = tmpl.Execute(w, nil)
+}
+
 func artistsHandler(w http.ResponseWriter, r *http.Request) {
-	artists := api.FetchArtists()
+	artists := FetchArtists()
+	if artists == nil {
+		http.Error(w, "Impossible de recuperer les artistes.", http.StatusInternalServerError)
+		return
+	}
+
 	tmpl, err := template.ParseFiles("templates/artists.html")
 	if err != nil {
 		http.Error(w, "Erreur de template", http.StatusInternalServerError)
 		return
 	}
-	tmpl.Execute(w, artists)
+
+	_ = tmpl.Execute(w, artists)
 }
 
-// (Partie 3)
 func artistDetailHandler(w http.ResponseWriter, r *http.Request) {
 	path := strings.TrimPrefix(r.URL.Path, "/artist/")
-
 	if path == "" || path == "/" {
 		http.Redirect(w, r, "/artists", http.StatusSeeOther)
 		return
@@ -37,14 +133,13 @@ func artistDetailHandler(w http.ResponseWriter, r *http.Request) {
 
 	id, err := strconv.Atoi(path)
 	if err != nil {
-		http.Error(w, "ID invalide. Utilisez /artist/1, /artist/2, etc.", http.StatusBadRequest)
+		http.Error(w, "ID invalide", http.StatusBadRequest)
 		return
 	}
 
-	// Récup les donnais de lartiste
-	artistDetail := api.FetchArtistDetail(id)
+	artistDetail := FetchArtistDetail(id)
 	if artistDetail == nil {
-		http.Error(w, "Artiste non trouvé", http.StatusNotFound)
+		http.Error(w, "Artiste non trouve", http.StatusNotFound)
 		return
 	}
 
@@ -53,37 +148,32 @@ func artistDetailHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Erreur de template", http.StatusInternalServerError)
 		return
 	}
-	tmpl.Execute(w, artistDetail)
+
+	_ = tmpl.Execute(w, artistDetail)
 }
 
-// (Partie 4)
 func searchHandler(w http.ResponseWriter, r *http.Request) {
-	//je recup le paramatre avec r.URL.Query().Get("query") et je le passe en minuscule en faisan strings.ToLower
-	query := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("query")))
+	raw := strings.TrimSpace(r.URL.Query().Get("query"))
+	query := strings.ToLower(raw)
 
 	if query == "" {
 		http.Redirect(w, r, "/artists", http.StatusSeeOther)
 		return
 	}
 
-	// Récup tous les artiste
-	allArtists := api.FetchArtists()
+	allArtists := FetchArtists()
+	if allArtists == nil {
+		http.Error(w, "Impossible de recuperer les artistes.", http.StatusInternalServerError)
+		return
+	}
 
-	// Filtrer les artistes selon la recherche
-	var results []api.Artist
-
-	//je parcours tout les artiste
+	var results []Artist
 	for _, artist := range allArtists {
-		// Recherche par nom d'artiste
-		//je verif si le nom de lartiste contient la recherche en utilisant string.cotnains
 		if strings.Contains(strings.ToLower(artist.Name), query) {
 			results = append(results, artist)
 			continue
 		}
-
-		// Recherche par membre
 		for _, member := range artist.Members {
-			//je verif si un des membres contient la recherche en utilisant string.cotnains
 			if strings.Contains(strings.ToLower(member), query) {
 				results = append(results, artist)
 				break
@@ -91,13 +181,12 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Creer les donnais pour le template
 	data := struct {
 		Query   string
-		Results []api.Artist
+		Results []Artist
 		Count   int
 	}{
-		Query:   r.URL.Query().Get("query"),
+		Query:   raw,
 		Results: results,
 		Count:   len(results),
 	}
@@ -107,7 +196,8 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Erreur de template", http.StatusInternalServerError)
 		return
 	}
-	tmpl.Execute(w, data)
+
+	_ = tmpl.Execute(w, data)
 }
 
 func main() {
@@ -116,6 +206,5 @@ func main() {
 	http.HandleFunc("/artist/", artistDetailHandler)
 	http.HandleFunc("/search", searchHandler)
 
-	fmt.Println("Démarrage du serveur sur http://localhost:8080")
-	http.ListenAndServe(":8080", nil)
+	_ = http.ListenAndServe(":8080", nil)
 }
