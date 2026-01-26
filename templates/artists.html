@@ -25,11 +25,52 @@
         </form>
     </nav>
 
-    <h1 style="margin-bottom: 20px; font-size: 2.5em;">Nos Artistes</h1>
+    <h1 style="margin-bottom: 30px; font-size: 2.5em;">Nos Artistes</h1>
 
-    {{if .Data}}
+    <!-- Filtres -->
+    <div class="filters-section">
+        <h2 class="filters-title">🔍 Filtres</h2>
+        <form action="/artists" method="GET" class="filters-form">
+            <div class="filter-group">
+                <label for="min_year">Année de création (min) :</label>
+                <input type="number" id="min_year" name="min_year" value="{{.Data.MinYear}}" placeholder="Ex: 1960" class="filter-input" min="1900" max="2025">
+            </div>
+
+            <div class="filter-group">
+                <label for="max_year">Année de création (max) :</label>
+                <input type="number" id="max_year" name="max_year" value="{{.Data.MaxYear}}" placeholder="Ex: 2020" class="filter-input" min="1900" max="2025">
+            </div>
+
+            <div class="filter-group">
+                <label for="members">Nombre de membres :</label>
+                <select id="members" name="members" class="filter-select">
+                    <option value="">Tous</option>
+                    <option value="1" {{if eq .Data.Members "1"}}selected{{end}}>1 membre</option>
+                    <option value="2" {{if eq .Data.Members "2"}}selected{{end}}>2 membres</option>
+                    <option value="3" {{if eq .Data.Members "3"}}selected{{end}}>3 membres</option>
+                    <option value="4" {{if eq .Data.Members "4"}}selected{{end}}>4 membres</option>
+                    <option value="5" {{if eq .Data.Members "5"}}selected{{end}}>5 membres</option>
+                    <option value="6" {{if eq .Data.Members "6"}}selected{{end}}>6 membres</option>
+                    <option value="7" {{if eq .Data.Members "7"}}selected{{end}}>7+ membres</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="location">Lieu de concert :</label>
+                <input type="text" id="location" name="location" value="{{.Data.Location}}" placeholder="Ex: paris, london..." class="filter-input">
+            </div>
+
+            <div class="filter-buttons">
+                <button type="submit" class="filter-btn apply">Appliquer</button>
+                <a href="/artists" class="filter-btn reset">Réinitialiser</a>
+            </div>
+        </form>
+    </div>
+
+    {{if .Data.Artists}}
+    <p style="color: var(--text-secondary); margin: 20px 0;">{{len .Data.Artists}} artiste(s) trouvé(s)</p>
     <div class="artists-grid">
-        {{range .Data}}
+        {{range .Data.Artists}}
         <div class="artist-card">
             <img src="{{.Image}}" alt="{{.Name}}" class="artist-image">
             <div class="artist-info">
@@ -44,8 +85,11 @@
         {{end}}
     </div>
     {{else}}
-    <div style="text-align:center; padding: 50px;">
-        <p>Chargement des artistes...</p>
+    <div style="text-align:center; padding: 50px; background: var(--bg-secondary); border-radius: 20px; border: 1px solid var(--border-color); margin-top: 30px;">
+        <p style="font-size: 1.2em; color: var(--text-secondary);">Aucun artiste ne correspond aux filtres sélectionnés.</p>
+        <p style="margin-top: 20px;">
+            <a href="/artists" style="color: var(--accent-color); text-decoration: none; font-weight: bold;">Réinitialiser les filtres</a>
+        </p>
     </div>
     {{end}}
 </div>

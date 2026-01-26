@@ -3,16 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Groupie Tracker - Accueil</title>
+    <title>Résultats de recherche</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
 
- </head>
+<body class="{{.Theme}}">
+<a href="/toggle-theme" class="theme-toggle-btn">
+    {{if eq .Theme "dark-theme"}}☀️{{else}}🌙{{end}}
+</a>
 
-<body>
 <div class="container">
-    <h1>Projet Groupie Tracker</h1>
-    <p>Bienvenue sur le site de suivi des artistes et de leurs concerts</p>
-    <a href="/artists" class="button">Voir les artistes</a>
-</div>
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="/"><strong>Groupie Tracker</strong></a>
+            <a href="/artists">Artistes</a>
+        </div>
 
+        <form action="/search" method="GET" class="search-form">
+            <input type="text" name="query" placeholder="Rechercher..." class="search-input" value="{{.Data.Query}}" required>
+            <button type="submit" class="search-button">Go</button>
+        </form>
+    </nav>
+
+    <h1 style="margin-bottom: 20px; font-size: 2.5em;">Résultats de recherche</h1>
+    <p style="color: var(--text-secondary); margin-bottom: 30px;">
+        Recherche pour : <strong>"{{.Data.Query}}"</strong> - {{.Data.Count}} résultat(s) trouvé(s)
+    </p>
+
+    {{if .Data.Results}}
+    <div class="artists-grid">
+        {{range .Data.Results}}
+        <div class="artist-card">
+            <img src="{{.Image}}" alt="{{.Name}}" class="artist-image">
+            <div class="artist-info">
+                <div class="artist-name">{{.Name}}</div>
+                <div class="artist-details">
+                    <p>Depuis : {{.CreationDate}}</p>
+                    <p>{{len .Members}} membre(s)</p>
+                </div>
+                <a href="/artist/{{.ID}}" class="view-details-btn">Voir détails</a>
+            </div>
+        </div>
+        {{end}}
+    </div>
+    {{else}}
+    <div style="text-align:center; padding: 50px; background: var(--bg-secondary); border-radius: 20px; border: 1px solid var(--border-color);">
+        <p style="font-size: 1.2em; color: var(--text-secondary);">Aucun résultat trouvé pour votre recherche.</p>
+        <p style="margin-top: 20px;">
+            <a href="/artists" style="color: var(--accent-color); text-decoration: none; font-weight: bold;">← Retour à la liste des artistes</a>
+        </p>
+    </div>
+    {{end}}
+</div>
 </body>
 </html>

@@ -44,12 +44,17 @@
     <div class="concerts-grid">
         {{range $location, $dates := .DatesLocations}}
         <div class="concert-card">
-            <div class="concert-location">{{$location}}</div>
+            <a href="/location?loc={{$location}}" class="concert-location-link">
+                <div class="concert-location">📍 {{$location}}</div>
+            </a>
             <div class="date-list">
                 {{range $dates}}
                 <span>{{.}}</span>
                 {{end}}
             </div>
+            <a href="/location?loc={{$location}}" class="location-see-all">
+                Voir tous les concerts ici →
+            </a>
         </div>
         {{end}}
     </div>

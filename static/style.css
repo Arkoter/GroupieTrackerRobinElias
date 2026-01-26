@@ -168,6 +168,96 @@ body {
     background: var(--accent-hover);
 }
 
+/* Filters Section */
+.filters-section {
+    background: var(--bg-secondary);
+    padding: 25px;
+    border-radius: 20px;
+    margin-bottom: 30px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--card-shadow);
+}
+
+.filters-title {
+    font-size: 1.5em;
+    margin-bottom: 20px;
+    color: var(--text-primary);
+}
+
+.filters-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.filter-group label {
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+    font-size: 0.9em;
+}
+
+.filter-input,
+.filter-select {
+    padding: 10px 15px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    outline: none;
+    font-size: 1em;
+    transition: border-color 0.2s;
+}
+
+.filter-input:focus,
+.filter-select:focus {
+    border-color: var(--accent-color);
+}
+
+.filter-buttons {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    grid-column: 1 / -1;
+}
+
+.filter-btn {
+    padding: 12px 25px;
+    border-radius: 10px;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+}
+
+.filter-btn.apply {
+    background: var(--accent-color);
+    color: white;
+}
+
+.filter-btn.apply:hover {
+    background: var(--accent-hover);
+    transform: translateY(-2px);
+}
+
+.filter-btn.reset {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    border: 2px solid var(--border-color);
+}
+
+.filter-btn.reset:hover {
+    border-color: var(--accent-color);
+}
+
 .artists-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -312,6 +402,17 @@ body {
     border-radius: 15px;
     border: 1px solid var(--border-color);
     box-shadow: var(--card-shadow);
+    transition: all 0.3s ease;
+}
+
+.concert-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.concert-location-link {
+    text-decoration: none;
+    color: inherit;
 }
 
 .concert-location {
@@ -320,6 +421,26 @@ body {
     color: var(--text-primary);
     margin-bottom: 10px;
     text-transform: capitalize;
+    transition: color 0.2s;
+}
+
+.concert-location-link:hover .concert-location {
+    color: var(--accent-color);
+}
+
+.location-see-all {
+    display: inline-block;
+    margin-top: 10px;
+    color: var(--accent-color);
+    text-decoration: none;
+    font-size: 0.9em;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.location-see-all:hover {
+    color: var(--accent-hover);
+    transform: translateX(3px);
 }
 
 .date-list span {
@@ -333,6 +454,63 @@ body {
     border: 1px solid var(--border-color);
 }
 
+/* Location Page Styles */
+.location-concerts-grid {
+    display: grid;
+    gap: 25px;
+}
+
+.location-concert-card {
+    background: var(--bg-secondary);
+    padding: 25px;
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--card-shadow);
+    transition: all 0.3s ease;
+}
+
+.location-concert-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+}
+
+.location-concert-header {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.location-artist-thumb {
+    width: 100px;
+    height: 100px;
+    border-radius: 15px;
+    object-fit: cover;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.location-artist-info {
+    flex: 1;
+}
+
+.location-artist-name {
+    font-size: 1.8em;
+    font-weight: 700;
+    margin-bottom: 5px;
+    color: var(--text-primary);
+}
+
+.location-artist-meta {
+    color: var(--text-secondary);
+    font-size: 0.95em;
+}
+
+.location-dates-section {
+    margin-bottom: 15px;
+}
+
 @media (max-width: 768px) {
     .detail-header {
         flex-direction: column;
@@ -342,5 +520,24 @@ body {
 
     .home-title {
         font-size: 3em;
+    }
+
+    .filters-form {
+        grid-template-columns: 1fr;
+    }
+
+    .navbar {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .location-concert-header {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .location-artist-thumb {
+        width: 120px;
+        height: 120px;
     }
 }

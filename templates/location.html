@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Concerts à {{.Data.Location}}</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body class="{{.Theme}}">
+<a href="/toggle-theme" class="theme-toggle-btn">
+    {{if eq .Theme "dark-theme"}}☀️{{else}}🌙{{end}}
+</a>
+
+<div class="container">
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="/artists">← Retour aux artistes</a>
+        </div>
+
+        <form action="/search" method="GET" class="search-form">
+            <input type="text" name="query" placeholder="Rechercher..." class="search-input" required>
+            <button type="submit" class="search-button">Go</button>
+        </form>
+    </nav>
+
+    <h1 style="margin-bottom: 10px; font-size: 2.5em;"> Concerts à {{.Data.Location}}</h1>
+    <p style="color: var(--text-secondary); margin-bottom: 40px; font-size: 1.1em;">
+        {{.Data.Count}} artiste(s) en concert dans ce lieu
+    </p>
+
+    {{if .Data.Concerts}}
+    <div class="location-concerts-grid">
+        {{range .Data.Concerts}}
+        <div class="location-concert-card">
+            <div class="location-concert-header">
+                <img src="{{.Artist.Image}}" alt="{{.Artist.Name}}" class="location-artist-thumb">
+                <div class="location-artist-info">
+                    <h2 class="location-artist-name">{{.Artist.Name}}</h2>
+                    <p class="location-artist-meta">{{len .Artist.Members}} membre(s) • Depuis {{.Artist.CreationDate}}</p>
+                </div>
+            </div>
+            
+            <div class="location-dates-section">
+                <h3 style="margin-bottom: 10px; color: var(--text-primary); font-size: 1.1em;">📅 Dates :</h3>
+                <div class="date-list">
+                    {{range .Dates}}
+                    <span>{{.}}</span>
+                    {{end}}
+                </div>
+            </div>
+
+            <a href="/artist/{{.Artist.ID}}" class="view-details-btn" style="margin-top: 15px;">Voir la page de l'artiste</a>
+        </div>
+        {{end}}
+    </div>
+    {{else}}
+    <div style="text-align:center; padding: 50px; background: var(--bg-secondary); border-radius: 20px; border: 1px solid var(--border-color);">
+        <p style="font-size: 1.2em; color: var(--text-secondary);">Aucun concert trouvé pour ce lieu.</p>
+    </div>
+    {{end}}
+</div>
+</body>
+</html>
