@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{{.Data.Name}} - Détails</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/style.css" />
 </head>
-<body class="{{.Theme}}">
 
+<body class="{{.Theme}}">
 <a href="/toggle-theme" class="theme-toggle-btn">
     {{if eq .Theme "dark-theme"}}☀️{{else}}🌙{{end}}
 </a>
@@ -16,19 +16,33 @@
     <nav class="navbar">
         <div class="nav-links">
             <a href="/artists">← Retour à la liste</a>
+            <a href="/artists">Artistes</a>
+            <a href="/favorites">Favoris</a>
+            <a href="/compare">Comparer</a>
+            <a href="/cache-info">Cache</a>
         </div>
     </nav>
 
     {{with .Data}}
     <div class="detail-header">
-        <img src="{{.Image}}" alt="{{.Name}}" class="detail-image">
+        <img src="{{.Image}}" alt="{{.Name}}" class="detail-image" />
+
         <div class="detail-info">
             <h1>{{.Name}}</h1>
+
             <div>
                 <span class="info-pill"><strong>Création :</strong> {{.CreationDate}}</span>
                 <span class="info-pill"><strong>1er Album :</strong> {{.FirstAlbum}}</span>
                 <span class="info-pill"><strong>Membres :</strong> {{len .Members}}</span>
             </div>
+
+            <!-- Favoris -->
+            <form action="/toggle-favorite" method="POST" style="margin-top: 15px;">
+                <input type="hidden" name="artist_id" value="{{.ID}}" />
+                <button type="submit" class="favorite-btn">
+                    ⭐ Ajouter / Retirer des favoris
+                </button>
+            </form>
         </div>
     </div>
 
@@ -40,6 +54,7 @@
     </div>
 
     <div class="section-title">Concerts & Dates</div>
+
     {{if .DatesLocations}}
     <div class="concerts-grid">
         {{range $location, $dates := .DatesLocations}}
@@ -47,11 +62,13 @@
             <a href="/location?loc={{$location}}" class="concert-location-link">
                 <div class="concert-location">📍 {{$location}}</div>
             </a>
+
             <div class="date-list">
                 {{range $dates}}
                 <span>{{.}}</span>
                 {{end}}
             </div>
+
             <a href="/location?loc={{$location}}" class="location-see-all">
                 Voir tous les concerts ici →
             </a>
@@ -61,7 +78,6 @@
     {{else}}
     <p>Aucune date annoncée pour le moment.</p>
     {{end}}
-
     {{end}}
 </div>
 </body>

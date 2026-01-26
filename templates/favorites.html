@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mes favoris</title>
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+
+<body class="{{.Theme}}">
+<a href="/toggle-theme" class="theme-toggle-btn">
+    {{if eq .Theme "dark-theme"}}☀️{{else}}🌙{{end}}
+</a>
+
+<div class="container">
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="/"><strong>Groupie Tracker</strong></a>
+            <a href="/artists">Artistes</a>
+            <a href="/favorites">Favoris</a>
+            <a href="/compare">Comparer</a>
+            <a href="/cache-info">Cache</a>
+        </div>
+
+        <form action="/search" method="GET" class="search-form">
+            <input type="text" name="query" placeholder="Rechercher..." class="search-input" required />
+            <button type="submit" class="search-button">Go</button>
+        </form>
+    </nav>
+
+    <h1 style="margin-bottom: 20px; font-size: 2.5em;">Mes artistes favoris</h1>
+
+    <p style="color: var(--text-secondary); margin-bottom: 30px;">
+        Vous avez {{.Data.Count}} artiste(s) favori(s)
+    </p>
+
+    {{if .Data.Favorites}}
+    <div class="artists-grid">
+        {{range .Data.Favorites}}
+        <div class="artist-card">
+            <img src="{{.Image}}" alt="{{.Name}}" class="artist-image" />
+
+            <div class="artist-info">
+                <div class="artist-name">{{.Name}}</div>
+
+                <div class="artist-details">
+                    <p>Depuis : {{.CreationDate}}</p>
+                    <p>{{len .Members}} membre(s)</p>
+                </div>
+
+                <a href="/artist/{{.ID}}" class="view-details-btn">Voir détails</a>
+
+                <form action="/toggle-favorite" method="POST" style="margin-top: 10px;">
+                    <input type="hidden" name="artist_id" value="{{.ID}}" />
+                    <button type="submit" class="favorite-btn">Retirer des favoris</button>
+                </form>
+            </div>
+        </div>
+        {{end}}
+    </div>
+    {{else}}
+    <div style="text-align:center; padding: 50px; background: var(--bg-secondary); border-radius: 20px; border: 1px solid var(--border-color);">
+        <p style="font-size: 1.2em; color: var(--text-secondary); margin-bottom: 20px;">
+            Vous n'avez pas encore d'artistes favoris.
+        </p>
+        <a href="/artists" style="color: var(--accent-color); text-decoration: none; font-weight: bold; font-size: 1.1em;">
+            Découvrir des artistes
+        </a>
+    </div>
+    {{end}}
+</div>
+
+<script src="/static/suggestions.js"></script>
+</body>
+</html>

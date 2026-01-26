@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparaison - {{.Data.Artist1.Name}} vs {{.Data.Artist2.Name}}</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body class="{{.Theme}}">
+<a href="/toggle-theme" class="theme-toggle-btn">
+    {{if eq .Theme "dark-theme"}}☀️{{else}}🌙{{end}}
+</a>
+
+<div class="container">
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="/compare">← Nouvelle comparaison</a>
+            <a href="/artists">Artistes</a>
+        </div>
+    </nav>
+
+    <h1 style="margin-bottom: 40px; font-size: 2.5em; text-align: center;">⚖️ Comparaison</h1>
+
+    {{with .Data}}
+    <!-- En-tete des deux artistes -->
+    <div class="comparison-header">
+        <div class="comparison-artist">
+            <img src="{{.Artist1.Image}}" alt="{{.Artist1.Name}}" class="comparison-image">
+            <h2>{{.Artist1.Name}}</h2>
+            <p>Créé en {{.Artist1.CreationDate}}</p>
+            <p>{{len .Artist1.Members}} membre(s)</p>
+            <p>1er Album : {{.Artist1.FirstAlbum}}</p>
+            <a href="/artist/{{.Artist1.ID}}" class="view-details-btn">Voir la page</a>
+        </div>
+
+        <div class="comparison-vs">VS</div>
+
+        <div class="comparison-artist">
+            <img src="{{.Artist2.Image}}" alt="{{.Artist2.Name}}" class="comparison-image">
+            <h2>{{.Artist2.Name}}</h2>
+            <p>Créé en {{.Artist2.CreationDate}}</p>
+            <p>{{len .Artist2.Members}} membre(s)</p>
+            <p>1er Album : {{.Artist2.FirstAlbum}}</p>
+            <a href="/artist/{{.Artist2.ID}}" class="view-details-btn">Voir la page</a>
+        </div>
+    </div>
+
+    <!-- Membres -->
+    <div class="comparison-section">
+        <h3 class="section-title">👥 Membres</h3>
+        <div class="comparison-row">
+            <div class="comparison-col">
+                <div class="members-container">
+                    {{range .Artist1.Members}}
+                    <span class="member-badge">{{.}}</span>
+                    {{end}}
+                </div>
+            </div>
+            <div class="comparison-col">
+                <div class="members-container">
+                    {{range .Artist2.Members}}
+                    <span class="member-badge">{{.}}</span>
+                    {{end}}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lieux communs -->
+    {{if .CommonLocations}}
+    <div class="comparison-section">
+        <h3 class="section-title">🎪 Lieux de concert communs ({{len .CommonLocations}})</h3>
+        <div class="comparison-common">
+            {{range .CommonLocations}}
+            <div class="location-badge common">📍 {{.}}</div>
+            {{end}}
+        </div>
+    </div>
+    {{end}}
+
+    <!-- Lieux uniques -->
+    <div class="comparison-section">
+        <h3 class="section-title">📍 Lieux de concert uniques</h3>
+        <div class="comparison-row">
+            <div class="comparison-col">
+                <h4 style="margin-bottom: 15px; color: var(--text-primary);">
+                    {{.Artist1.Name}} uniquement ({{len .UniqueLocations1}})
+                </h4>
+                {{if .UniqueLocations1}}
+                <div class="location-badges-grid">
+                    {{range .UniqueLocations1}}
+                    <div class="location-badge unique1">📍 {{.}}</div>
+                    {{end}}
+                </div>
+                {{else}}
+                <p style="color: var(--text-secondary);">Aucun lieu unique</p>
+                {{end}}
+            </div>
+
+            <div class="comparison-col">
+                <h4 style="margin-bottom: 15px; color: var(--text-primary);">
+                    {{.Artist2.Name}} uniquement ({{len .UniqueLocations2}})
+                </h4>
+                {{if .UniqueLocations2}}
+                <div class="location-badges-grid">
+                    {{range .UniqueLocations2}}
+                    <div class="location-badge unique2">📍 {{.}}</div>
+                    {{end}}
+                </div>
+                {{else}}
+                <p style="color: var(--text-secondary);">Aucun lieu unique</p>
+                {{end}}
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="comparison-section">
+        <h3 class="section-title">📊 Statistiques</h3>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total de lieux</div>
+                <div class="stat-row">
+                    <div class="stat-value">{{len .Artist1.DatesLocations}}</div>
+                    <div class="stat-vs">vs</div>
+                    <div class="stat-value">{{len .Artist2.DatesLocations}}</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Nombre de membres</div>
+                <div class="stat-row">
+                    <div class="stat-value">{{len .Artist1.Members}}</div>
+                    <div class="stat-vs">vs</div>
+                    <div class="stat-value">{{len .Artist2.Members}}</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Année de création</div>
+                <div class="stat-row">
+                    <div class="stat-value">{{.Artist1.CreationDate}}</div>
+                    <div class="stat-vs">vs</div>
+                    <div class="stat-value">{{.Artist2.CreationDate}}</div>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Lieux communs</div>
+                <div class="stat-value single">{{len .CommonLocations}}</div>
+            </div>
+        </div>
+    </div>
+
+    {{end}}
+</div>
+
+<script src="/static/suggestions.js"></script>
+</body>
+</html>

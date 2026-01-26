@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informations Cache API</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body class="{{.Theme}}">
+<a href="/toggle-theme" class="theme-toggle-btn">
+    {{if eq .Theme "dark-theme"}}☀️{{else}}🌙{{end}}
+</a>
+
+<div class="container">
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="/static"><strong>Groupie Tracker</strong></a>
+            <a href="/artists">Artistes</a>
+            <a href="/favorites">❤️ Favoris</a>
+            <a href="/compare">⚖️ Comparer</a>
+            <a href="/cache-info">📊 Cache</a>
+        </div>
+
+        <form action="/search" method="GET" class="search-form">
+            <input type="text" name="query" placeholder="Rechercher..." class="search-input" required>
+            <button type="submit" class="search-button">Go</button>
+        </form>
+    </nav>
+
+    <h1 style="margin-bottom: 20px; font-size: 2.5em;">📊 Informations sur le Cache API</h1>
+    <p style="color: var(--text-secondary); margin-bottom: 40px;">
+        Le cache permet de stocker les données de l'API en mémoire pour améliorer les performances
+    </p>
+
+    {{with .Data}}
+    <div class="cache-info-grid">
+        <div class="cache-info-card">
+            <div class="cache-info-icon">👥</div>
+            <div class="cache-info-label">Artistes en cache</div>
+            <div class="cache-info-value">{{.ArtistsCount}}</div>
+        </div>
+
+        <div class="cache-info-card">
+            <div class="cache-info-icon">🎪</div>
+            <div class="cache-info-label">Relations en cache</div>
+            <div class="cache-info-value">{{.RelationsCount}}</div>
+        </div>
+
+        <div class="cache-info-card">
+            <div class="cache-info-icon">🕐</div>
+            <div class="cache-info-label">Dernier rafraîchissement</div>
+            <div class="cache-info-value">{{.LastRefresh}}</div>
+        </div>
+
+        <div class="cache-info-card">
+            <div class="cache-info-icon">⏳</div>
+            <div class="cache-info-label">Âge du cache</div>
+            <div class="cache-info-value">{{.CacheAge}}</div>
+        </div>
+
+        <div class="cache-info-card">
+            <div class="cache-info-icon">⏰</div>
+            <div class="cache-info-label">Prochain rafraîchissement</div>
+            <div class="cache-info-value">{{.NextRefresh}}</div>
+        </div>
+
+        <div class="cache-info-card action">
+            <form action="/refresh-cache" method="POST">
+                <button type="submit" class="cache-refresh-btn">
+                    🔄 Rafraîchir le cache maintenant
+                </button>
+            </form>
+        </div>
+    </div>
+    {{end}}
+
+    <div class="cache-explanation">
+        <h2 style="margin-bottom: 20px; font-size: 1.5em;">ℹ️ Comment fonctionne le cache ?</h2>
+        <div class="cache-features">
+            <div class="cache-feature">
+                <strong>⚡ Performances améliorées</strong>
+                <p>Les données sont stockées en mémoire pour un accès instantané</p>
+            </div>
+            <div class="cache-feature">
+                <strong>🔄 Rafraîchissement automatique</strong>
+                <p>Le cache se rafraîchit automatiquement toutes les 5 minutes</p>
+            </div>
+            <div class="cache-feature">
+                <strong>💾 Stockage en mémoire</strong>
+                <p>Les artistes et leurs relations sont mis en cache séparément</p>
+            </div>
+            <div class="cache-feature">
+                <strong>🛡️ Protection API</strong>
+                <p>Réduit le nombre de requêtes vers l'API externe</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/static/suggestions.js"></script>
+</body>
+</html>

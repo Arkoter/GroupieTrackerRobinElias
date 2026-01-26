@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparer des Artistes</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body class="{{.Theme}}">
+<a href="/toggle-theme" class="theme-toggle-btn">
+    {{if eq .Theme "dark-theme"}}☀️{{else}}🌙{{end}}
+</a>
+
+<div class="container">
+    <nav class="navbar">
+        <div class="nav-links">
+            <a href="/static"><strong>Groupie Tracker</strong></a>
+            <a href="/artists">Artistes</a>
+            <a href="/favorites">❤️ Favoris</a>
+            <a href="/compare">⚖️ Comparer</a>
+            <a href="/cache-info">📊 Cache</a>
+        </div>
+
+        <form action="/search" method="GET" class="search-form">
+            <input type="text" name="query" placeholder="Rechercher..." class="search-input" required>
+            <button type="submit" class="search-button">Go</button>
+        </form>
+    </nav>
+
+    <h1 style="margin-bottom: 20px; font-size: 2.5em;">⚖️ Comparer des Artistes</h1>
+    <p style="color: var(--text-secondary); margin-bottom: 40px;">
+        Sélectionnez deux artistes pour comparer leurs informations et lieux de concert
+    </p>
+
+    <div class="compare-selection">
+        <form action="/compare-result" method="GET" class="compare-form">
+            <div class="compare-selects">
+                <div class="compare-select-group">
+                    <label for="artist1">Premier artiste :</label>
+                    <select name="artist1" id="artist1" class="compare-select" required>
+                        <option value="">-- Choisir un artiste --</option>
+                        {{range .Data}}
+                        <option value="{{.ID}}">{{.Name}} ({{.CreationDate}})</option>
+                        {{end}}
+                    </select>
+                </div>
+
+                <div class="compare-vs">VS</div>
+
+                <div class="compare-select-group">
+                    <label for="artist2">Deuxième artiste :</label>
+                    <select name="artist2" id="artist2" class="compare-select" required>
+                        <option value="">-- Choisir un artiste --</option>
+                        {{range .Data}}
+                        <option value="{{.ID}}">{{.Name}} ({{.CreationDate}})</option>
+                        {{end}}
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" class="compare-btn">Comparer</button>
+        </form>
+    </div>
+</div>
+
+<script src="/static/suggestions.js"></script>
+</body>
+</html>

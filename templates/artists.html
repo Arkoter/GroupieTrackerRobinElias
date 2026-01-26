@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Liste des Artistes</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="/static/style.css" />
 </head>
 
 <body class="{{.Theme}}">
@@ -17,10 +17,19 @@
         <div class="nav-links">
             <a href="/"><strong>Groupie Tracker</strong></a>
             <a href="/artists">Artistes</a>
+            <a href="/favorites">Favoris</a>
+            <a href="/compare">Comparer</a>
+            <a href="/cache-info">Cache</a>
         </div>
 
         <form action="/search" method="GET" class="search-form">
-            <input type="text" name="query" placeholder="Rechercher..." class="search-input" required>
+            <input
+                    type="text"
+                    name="query"
+                    placeholder="Rechercher..."
+                    class="search-input"
+                    required
+            />
             <button type="submit" class="search-button">Go</button>
         </form>
     </nav>
@@ -30,34 +39,95 @@
     <!-- Filtres -->
     <div class="filters-section">
         <h2 class="filters-title">🔍 Filtres</h2>
+
         <form action="/artists" method="GET" class="filters-form">
             <div class="filter-group">
                 <label for="min_year">Année de création (min) :</label>
-                <input type="number" id="min_year" name="min_year" value="{{.Data.MinYear}}" placeholder="Ex: 1960" class="filter-input" min="1900" max="2025">
+                <input
+                        type="number"
+                        id="min_year"
+                        name="min_year"
+                        value="{{.Data.MinYear}}"
+                        placeholder="Ex: 1960"
+                        class="filter-input"
+                        min="1900"
+                        max="2025"
+                />
             </div>
 
             <div class="filter-group">
                 <label for="max_year">Année de création (max) :</label>
-                <input type="number" id="max_year" name="max_year" value="{{.Data.MaxYear}}" placeholder="Ex: 2020" class="filter-input" min="1900" max="2025">
+                <input
+                        type="number"
+                        id="max_year"
+                        name="max_year"
+                        value="{{.Data.MaxYear}}"
+                        placeholder="Ex: 2020"
+                        class="filter-input"
+                        min="1900"
+                        max="2025"
+                />
             </div>
 
             <div class="filter-group">
                 <label for="members">Nombre de membres :</label>
                 <select id="members" name="members" class="filter-select">
                     <option value="">Tous</option>
-                    <option value="1" {{if eq .Data.Members "1"}}selected{{end}}>1 membre</option>
-                    <option value="2" {{if eq .Data.Members "2"}}selected{{end}}>2 membres</option>
-                    <option value="3" {{if eq .Data.Members "3"}}selected{{end}}>3 membres</option>
-                    <option value="4" {{if eq .Data.Members "4"}}selected{{end}}>4 membres</option>
-                    <option value="5" {{if eq .Data.Members "5"}}selected{{end}}>5 membres</option>
-                    <option value="6" {{if eq .Data.Members "6"}}selected{{end}}>6 membres</option>
-                    <option value="7" {{if eq .Data.Members "7"}}selected{{end}}>7+ membres</option>
+
+                    {{if eq .Data.Members "1"}}
+                    <option value="1" selected>1 membre</option>
+                    {{else}}
+                    <option value="1">1 membre</option>
+                    {{end}}
+
+                    {{if eq .Data.Members "2"}}
+                    <option value="2" selected>2 membres</option>
+                    {{else}}
+                    <option value="2">2 membres</option>
+                    {{end}}
+
+                    {{if eq .Data.Members "3"}}
+                    <option value="3" selected>3 membres</option>
+                    {{else}}
+                    <option value="3">3 membres</option>
+                    {{end}}
+
+                    {{if eq .Data.Members "4"}}
+                    <option value="4" selected>4 membres</option>
+                    {{else}}
+                    <option value="4">4 membres</option>
+                    {{end}}
+
+                    {{if eq .Data.Members "5"}}
+                    <option value="5" selected>5 membres</option>
+                    {{else}}
+                    <option value="5">5 membres</option>
+                    {{end}}
+
+                    {{if eq .Data.Members "6"}}
+                    <option value="6" selected>6 membres</option>
+                    {{else}}
+                    <option value="6">6 membres</option>
+                    {{end}}
+
+                    {{if eq .Data.Members "7"}}
+                    <option value="7" selected>7+ membres</option>
+                    {{else}}
+                    <option value="7">7+ membres</option>
+                    {{end}}
                 </select>
             </div>
 
             <div class="filter-group">
                 <label for="location">Lieu de concert :</label>
-                <input type="text" id="location" name="location" value="{{.Data.Location}}" placeholder="Ex: paris, london..." class="filter-input">
+                <input
+                        type="text"
+                        id="location"
+                        name="location"
+                        value="{{.Data.Location}}"
+                        placeholder="Ex: paris, london..."
+                        class="filter-input"
+                />
             </div>
 
             <div class="filter-buttons">
@@ -68,30 +138,54 @@
     </div>
 
     {{if .Data.Artists}}
-    <p style="color: var(--text-secondary); margin: 20px 0;">{{len .Data.Artists}} artiste(s) trouvé(s)</p>
+    <p style="color: var(--text-secondary); margin: 20px 0;">
+        {{len .Data.Artists}} artiste(s) trouvé(s)
+    </p>
+
     <div class="artists-grid">
         {{range .Data.Artists}}
         <div class="artist-card">
-            <img src="{{.Image}}" alt="{{.Name}}" class="artist-image">
+            <img src="{{.Image}}" alt="{{.Name}}" class="artist-image" />
+
             <div class="artist-info">
                 <div class="artist-name">{{.Name}}</div>
+
                 <div class="artist-details">
                     <p>Depuis : {{.CreationDate}}</p>
                     <p>{{len .Members}} membre(s)</p>
                 </div>
+
                 <a href="/artist/{{.ID}}" class="view-details-btn">Voir détails</a>
+
+                <!-- Favoris -->
+                <form action="/toggle-favorite" method="POST" style="margin-top: 10px;">
+                    <input type="hidden" name="artist_id" value="{{.ID}}" />
+
+                    {{/* Si FavoriteStatus existe et contient l'ID => "retirer", sinon "ajouter" */}}
+                    {{if index $.Data.FavoriteStatus .ID}}
+                    <button type="submit" class="favorite-btn">✅ Retirer des favoris</button>
+                    {{else}}
+                    <button type="submit" class="favorite-btn">⭐ Ajouter aux favoris</button>
+                    {{end}}
+                </form>
             </div>
         </div>
         {{end}}
     </div>
     {{else}}
     <div style="text-align:center; padding: 50px; background: var(--bg-secondary); border-radius: 20px; border: 1px solid var(--border-color); margin-top: 30px;">
-        <p style="font-size: 1.2em; color: var(--text-secondary);">Aucun artiste ne correspond aux filtres sélectionnés.</p>
+        <p style="font-size: 1.2em; color: var(--text-secondary);">
+            Aucun artiste ne correspond aux filtres sélectionnés.
+        </p>
         <p style="margin-top: 20px;">
-            <a href="/artists" style="color: var(--accent-color); text-decoration: none; font-weight: bold;">Réinitialiser les filtres</a>
+            <a href="/artists" style="color: var(--accent-color); text-decoration: none; font-weight: bold;">
+                Réinitialiser les filtres
+            </a>
         </p>
     </div>
     {{end}}
 </div>
+
+<script src="/static/suggestions.js"></script>
 </body>
 </html>

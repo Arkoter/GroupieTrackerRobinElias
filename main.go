@@ -2,55 +2,13 @@ package main
 
 import (
 	"encoding/json"
-	"html/template"
 	"net/http"
 	"strconv"
 	"strings"
 )
 
-type Artist struct {
-	ID           int      `json:"id"`
-	Image        string   `json:"image"`
-	Name         string   `json:"name"`
-	CreationDate int      `json:"creationDate"`
-	FirstAlbum   string   `json:"firstAlbum"`
-	Members      []string `json:"members"`
-}
-
-type Relation struct {
-	DatesLocations map[string][]string `json:"datesLocations"`
-}
-
-type ArtistDetail struct {
-	Artist
-	DatesLocations map[string][]string
-}
-
-type PageData struct {
-	Theme string
-	Data  interface{}
-}
-
-type ErrorPageData struct {
-	Theme   string
-	Code    int
-	Message string
-	Details string
-}
-
-const (
-	artistsAPI  = "https://groupietrackers.herokuapp.com/api/artists"
-	relationAPI = "https://groupietrackers.herokuapp.com/api/relation"
-)
-
-var cachedArtists []Artist
-var cachedRelations = make(map[int]map[string][]string)
-
-func FetchArtists() ([]Artist, error) {
-	if cachedArtists != nil {
-		return cachedArtists, nil
-	}
-
+// fetchArtistsFromAPI fait la vraie requête à l'API
+func fetchArtistsFromAPI() ([]Artist, error) {
 	resp, err := http.Get(artistsAPI)
 	if err != nil {
 		return nil, err
@@ -66,10 +24,36 @@ func FetchArtists() ([]Artist, error) {
 		return nil, err
 	}
 
-	cachedArtists = artists
 	return artists, nil
 }
 
+// fetchRelationFromAPI fait la vraie requête à l'API pour les relations
+func fetchRelationFromAPI(id int) (map[string][]string, error) {
+	relURL := relationAPI + "/" + strconv.Itoa(id)
+	relResp, err := http.Get(relURL)
+	if err != nil {
+		return map[string][]string{}, err
+	}
+	defer relResp.Body.Close()
+
+	var relation Relation
+	if err := json.NewDecoder(relResp.Body).Decode(&relation); err != nil {
+		return map[string][]string{}, err
+	}
+
+	if relation.DatesLocations == nil {
+		relation.DatesLocations = map[string][]string{}
+	}
+
+	return relation.DatesLocations, nil
+}
+
+// FetchArtists avec cache
+func FetchArtists() ([]Artist, error) {
+	return apiCache.GetArtists()
+}
+
+// FetchArtistDetail avec cache
 func FetchArtistDetail(id int) (*ArtistDetail, error) {
 	artists, err := FetchArtists()
 	if err != nil {
@@ -89,34 +73,14 @@ func FetchArtistDetail(id int) (*ArtistDetail, error) {
 		return nil, nil
 	}
 
-	if relations, ok := cachedRelations[id]; ok {
-		return &ArtistDetail{
-			Artist:         artist,
-			DatesLocations: relations,
-		}, nil
-	}
-
-	relURL := relationAPI + "/" + strconv.Itoa(id)
-	relResp, err := http.Get(relURL)
+	relations, err := apiCache.GetRelation(id)
 	if err != nil {
 		return &ArtistDetail{Artist: artist, DatesLocations: map[string][]string{}}, nil
 	}
-	defer relResp.Body.Close()
-
-	var relation Relation
-	if err := json.NewDecoder(relResp.Body).Decode(&relation); err != nil {
-		return &ArtistDetail{Artist: artist, DatesLocations: map[string][]string{}}, nil
-	}
-
-	if relation.DatesLocations == nil {
-		relation.DatesLocations = map[string][]string{}
-	}
-
-	cachedRelations[id] = relation.DatesLocations
 
 	return &ArtistDetail{
 		Artist:         artist,
-		DatesLocations: relation.DatesLocations,
+		DatesLocations: relations,
 	}, nil
 }
 
@@ -129,7 +93,7 @@ func getThemeClass(r *http.Request) string {
 }
 
 func renderError(w http.ResponseWriter, r *http.Request, code int, message, details string) {
-	tmpl, err := template.ParseFiles("templates/error.html")
+	tmpl, err := parseTemplate("templates/error.html")
 	if err != nil {
 		http.Error(w, message, code)
 		return
@@ -181,7 +145,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tmpl, err := template.ParseFiles("templates/index.html")
+	tmpl, err := parseTemplate("templates/index.html")
 	if err != nil {
 		renderError(w, r, http.StatusInternalServerError, "Erreur serveur", "Impossible de charger la page.")
 		return
@@ -214,7 +178,10 @@ func artistsHandler(w http.ResponseWriter, r *http.Request) {
 
 	filtered := filterArtists(artists, minYear, maxYear, members, location)
 
-	tmpl, err := template.ParseFiles("templates/artists.html")
+	// Obtenir les statuts favoris
+	favoriteStatus := GetFavoriteStatus(r, filtered)
+
+	tmpl, err := parseTemplate("templates/artists.html")
 	if err != nil {
 		renderError(w, r, http.StatusInternalServerError, "Erreur serveur", "Impossible de charger la page.")
 		return
@@ -223,11 +190,12 @@ func artistsHandler(w http.ResponseWriter, r *http.Request) {
 	data := PageData{
 		Theme: getThemeClass(r),
 		Data: map[string]interface{}{
-			"Artists":  filtered,
-			"MinYear":  minYear,
-			"MaxYear":  maxYear,
-			"Members":  members,
-			"Location": location,
+			"Artists":        filtered,
+			"MinYear":        minYear,
+			"MaxYear":        maxYear,
+			"Members":        members,
+			"Location":       location,
+			"FavoriteStatus": favoriteStatus,
 		},
 	}
 	_ = tmpl.Execute(w, data)
@@ -237,7 +205,7 @@ func filterArtists(artists []Artist, minYear, maxYear, members, location string)
 	var filtered []Artist
 
 	for _, artist := range artists {
-		// Filtre annee min
+		// Filtre année min
 		if minYear != "" {
 			min, err := strconv.Atoi(minYear)
 			if err == nil && artist.CreationDate < min {
@@ -245,7 +213,7 @@ func filterArtists(artists []Artist, minYear, maxYear, members, location string)
 			}
 		}
 
-		// Filtre annee max
+		// Filtre année max
 		if maxYear != "" {
 			max, err := strconv.Atoi(maxYear)
 			if err == nil && artist.CreationDate > max {
@@ -253,7 +221,7 @@ func filterArtists(artists []Artist, minYear, maxYear, members, location string)
 			}
 		}
 
-		// Filtre nombre demembres
+		// Filtre nombre de membres
 		if members != "" {
 			memberCount, err := strconv.Atoi(members)
 			if err == nil && len(artist.Members) != memberCount {
@@ -261,7 +229,7 @@ func filterArtists(artists []Artist, minYear, maxYear, members, location string)
 			}
 		}
 
-		// Filtre par lieu (faut vrifier les relations)
+		// Filtre par lieu
 		if location != "" {
 			locationLower := strings.ToLower(location)
 			hasLocation := false
@@ -305,13 +273,12 @@ func artistDetailHandler(w http.ResponseWriter, r *http.Request) {
 		renderError(w, r, http.StatusInternalServerError, "Erreur serveur", "Impossible de récupérer les détails de l'artiste.")
 		return
 	}
-
 	if artistDetail == nil {
 		renderError(w, r, http.StatusNotFound, "Artiste non trouvé", "Aucun artiste ne correspond à cet ID.")
 		return
 	}
 
-	tmpl, err := template.ParseFiles("templates/artist_detail.html")
+	tmpl, err := parseTemplate("templates/artist_detail.html")
 	if err != nil {
 		renderError(w, r, http.StatusInternalServerError, "Erreur serveur", "Impossible de charger la page.")
 		return
@@ -393,7 +360,7 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 		Count:   len(results),
 	}
 
-	tmpl, err := template.ParseFiles("templates/search.html")
+	tmpl, err := parseTemplate("templates/search.html")
 	if err != nil {
 		renderError(w, r, http.StatusInternalServerError, "Erreur serveur", "Impossible de charger la page.")
 		return
@@ -406,7 +373,6 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 	_ = tmpl.Execute(w, data)
 }
 
-// locationHandler - Événement interactif : clic sur un lieu
 func locationHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		renderError(w, r, http.StatusMethodNotAllowed, "Méthode non autorisée", "Seule la méthode GET est acceptée.")
@@ -448,7 +414,7 @@ func locationHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	tmpl, err := template.ParseFiles("templates/location.html")
+	tmpl, err := parseTemplate("templates/location.html")
 	if err != nil {
 		renderError(w, r, http.StatusInternalServerError, "Erreur serveur", "Impossible de charger la page.")
 		return
@@ -469,6 +435,7 @@ func main() {
 	fs := http.FileServer(http.Dir("static"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
 
+	// Routes principales
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/artists", artistsHandler)
 	http.HandleFunc("/artist/", artistDetailHandler)
@@ -476,6 +443,27 @@ func main() {
 	http.HandleFunc("/location", locationHandler)
 	http.HandleFunc("/toggle-theme", toggleThemeHandler)
 
-	println("  http://localhost:8080")
+	// Routes bonus - Favoris
+	http.HandleFunc("/favorites", FavoritesHandler)
+	http.HandleFunc("/toggle-favorite", ToggleFavoriteHandler)
+
+	// Routes bonus - Comparaison
+	http.HandleFunc("/compare", CompareHandler)
+	http.HandleFunc("/compare-result", CompareResultHandler)
+
+	// Routes bonus - Cache
+	http.HandleFunc("/cache-info", CacheInfoHandler)
+	http.HandleFunc("/refresh-cache", RefreshCacheHandler)
+
+	println("🎸 Serveur démarré (version BONUS) sur http://localhost:8080")
+	println("")
+	println("✨ Fonctionnalités disponibles :")
+	println("   • Recherche avec suggestions JS")
+	println("   • Filtres avancés")
+	println("   • Favoris (cookies)")
+	println("   • Comparaison d'artistes")
+	println("   • Cache API avec rafraîchissement")
+	println("   • Mode sombre/clair")
+	println("")
 	_ = http.ListenAndServe(":8080", nil)
 }
