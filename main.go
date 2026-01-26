@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"html/template"
 	"net/http"
 	"strconv"
@@ -25,6 +24,11 @@ type Relation struct {
 type ArtistDetail struct {
 	Artist
 	DatesLocations map[string][]string
+}
+
+type PageData struct {
+	Theme string
+	Data  interface{}
 }
 
 const (
@@ -65,22 +69,16 @@ func FetchArtistDetail(id int) *ArtistDetail {
 		return nil
 	}
 
-	relURL := fmt.Sprintf("%s/%d", relationAPI, id)
+	relURL := relationAPI + "/" + strconv.Itoa(id)
 	relResp, err := http.Get(relURL)
 	if err != nil {
-		return &ArtistDetail{
-			Artist:         artist,
-			DatesLocations: map[string][]string{},
-		}
+		return &ArtistDetail{Artist: artist, DatesLocations: map[string][]string{}}
 	}
 	defer relResp.Body.Close()
 
 	var relation Relation
 	if err := json.NewDecoder(relResp.Body).Decode(&relation); err != nil {
-		return &ArtistDetail{
-			Artist:         artist,
-			DatesLocations: map[string][]string{},
-		}
+		return &ArtistDetail{Artist: artist, DatesLocations: map[string][]string{}}
 	}
 
 	if relation.DatesLocations == nil {
@@ -91,6 +89,39 @@ func FetchArtistDetail(id int) *ArtistDetail {
 		Artist:         artist,
 		DatesLocations: relation.DatesLocations,
 	}
+}
+
+func getThemeClass(r *http.Request) string {
+	cookie, err := r.Cookie("theme")
+	if err != nil || cookie.Value == "light" {
+		return "light-theme"
+	}
+	return "dark-theme"
+}
+
+func toggleThemeHandler(w http.ResponseWriter, r *http.Request) {
+	currentTheme := "light"
+	cookie, err := r.Cookie("theme")
+	if err == nil {
+		currentTheme = cookie.Value
+	}
+
+	newTheme := "light"
+	if currentTheme == "light" {
+		newTheme = "dark"
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:  "theme",
+		Value: newTheme,
+		Path:  "/",
+	})
+
+	referer := r.Header.Get("Referer")
+	if referer == "" {
+		referer = "/"
+	}
+	http.Redirect(w, r, referer, http.StatusSeeOther)
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
@@ -105,7 +136,11 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = tmpl.Execute(w, nil)
+	data := PageData{
+		Theme: getThemeClass(r),
+		Data:  nil,
+	}
+	_ = tmpl.Execute(w, data)
 }
 
 func artistsHandler(w http.ResponseWriter, r *http.Request) {
@@ -121,25 +156,24 @@ func artistsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = tmpl.Execute(w, artists)
+	data := PageData{
+		Theme: getThemeClass(r),
+		Data:  artists,
+	}
+	_ = tmpl.Execute(w, data)
 }
 
 func artistDetailHandler(w http.ResponseWriter, r *http.Request) {
 	path := strings.TrimPrefix(r.URL.Path, "/artist/")
-	if path == "" || path == "/" {
-		http.Redirect(w, r, "/artists", http.StatusSeeOther)
-		return
-	}
-
 	id, err := strconv.Atoi(path)
 	if err != nil {
-		http.Error(w, "ID invalide", http.StatusBadRequest)
+		http.Redirect(w, r, "/artists", http.StatusSeeOther)
 		return
 	}
 
 	artistDetail := FetchArtistDetail(id)
 	if artistDetail == nil {
-		http.Error(w, "Artiste non trouve", http.StatusNotFound)
+		http.NotFound(w, r)
 		return
 	}
 
@@ -149,7 +183,11 @@ func artistDetailHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_ = tmpl.Execute(w, artistDetail)
+	data := PageData{
+		Theme: getThemeClass(r),
+		Data:  artistDetail,
+	}
+	_ = tmpl.Execute(w, data)
 }
 
 func searchHandler(w http.ResponseWriter, r *http.Request) {
@@ -162,26 +200,23 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	allArtists := FetchArtists()
-	if allArtists == nil {
-		http.Error(w, "Impossible de recuperer les artistes.", http.StatusInternalServerError)
-		return
-	}
-
 	var results []Artist
-	for _, artist := range allArtists {
-		if strings.Contains(strings.ToLower(artist.Name), query) {
-			results = append(results, artist)
-			continue
-		}
-		for _, member := range artist.Members {
-			if strings.Contains(strings.ToLower(member), query) {
+	if allArtists != nil {
+		for _, artist := range allArtists {
+			if strings.Contains(strings.ToLower(artist.Name), query) {
 				results = append(results, artist)
-				break
+				continue
+			}
+			for _, member := range artist.Members {
+				if strings.Contains(strings.ToLower(member), query) {
+					results = append(results, artist)
+					break
+				}
 			}
 		}
 	}
 
-	data := struct {
+	searchData := struct {
 		Query   string
 		Results []Artist
 		Count   int
@@ -197,14 +232,23 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	data := PageData{
+		Theme: getThemeClass(r),
+		Data:  searchData,
+	}
 	_ = tmpl.Execute(w, data)
 }
 
 func main() {
+	fs := http.FileServer(http.Dir("static"))
+	http.Handle("/static/", http.StripPrefix("/static/", fs))
+
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/artists", artistsHandler)
 	http.HandleFunc("/artist/", artistDetailHandler)
 	http.HandleFunc("/search", searchHandler)
+	http.HandleFunc("/toggle-theme", toggleThemeHandler)
 
+	println("http://localhost:8080")
 	_ = http.ListenAndServe(":8080", nil)
 }
