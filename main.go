@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-// fetchArtistsFromAPI fait la vraie requête à l'API
+// fetchArtistsFromAPI fait la vraie requete a l'API
 func fetchArtistsFromAPI() ([]Artist, error) {
 	resp, err := http.Get(artistsAPI)
 	if err != nil {
@@ -20,14 +20,14 @@ func fetchArtistsFromAPI() ([]Artist, error) {
 	}
 
 	var artists []Artist
+	// jdecode le flux json direct ds la variable
 	if err := json.NewDecoder(resp.Body).Decode(&artists); err != nil {
 		return nil, err
 	}
-
 	return artists, nil
 }
 
-// fetchRelationFromAPI fait la vraie requête à l'API pour les relations
+// fetchRelationFromAPI fait la vraie requete pr les dates et lieux
 func fetchRelationFromAPI(id int) (map[string][]string, error) {
 	relURL := relationAPI + "/" + strconv.Itoa(id)
 	relResp, err := http.Get(relURL)
@@ -40,20 +40,19 @@ func fetchRelationFromAPI(id int) (map[string][]string, error) {
 	if err := json.NewDecoder(relResp.Body).Decode(&relation); err != nil {
 		return map[string][]string{}, err
 	}
-
+	// si cest vide jrenvoie un truc propre pr pas que ca plante
 	if relation.DatesLocations == nil {
 		relation.DatesLocations = map[string][]string{}
 	}
-
 	return relation.DatesLocations, nil
 }
 
-// FetchArtists avec cache
+// FetchArtists passe par mon cache pr pas saturer l'API
 func FetchArtists() ([]Artist, error) {
 	return apiCache.GetArtists()
 }
 
-// FetchArtistDetail avec cache
+// FetchArtistDetail regroupe les infos de base + les relations
 func FetchArtistDetail(id int) (*ArtistDetail, error) {
 	artists, err := FetchArtists()
 	if err != nil {
@@ -84,6 +83,7 @@ func FetchArtistDetail(id int) (*ArtistDetail, error) {
 	}, nil
 }
 
+// jrecup le theme via le cookie pr savoir si jmet la classe dark ou light
 func getThemeClass(r *http.Request) string {
 	cookie, err := r.Cookie("theme")
 	if err != nil || cookie.Value == "light" {
@@ -92,23 +92,42 @@ func getThemeClass(r *http.Request) string {
 	return "dark-theme"
 }
 
+// ma fct pr eviter les crashs et envoyer des pages derreurs propres
 func renderError(w http.ResponseWriter, r *http.Request, code int, message, details string) {
+	// jessaye de charger mon template special erreur
 	tmpl, err := parseTemplate("templates/error.html")
 	if err != nil {
+		// si mm le template derreur marche pas, jrenvoie un truc brut pr pas crash
 		http.Error(w, message, code)
 		return
 	}
 
+	// jprecise le code HTTP (404, 500, etc) ds le header de la reponse
 	w.WriteHeader(code)
+
+	// jfous ttes les infos pr que luser comprenne ce quil a peter
 	data := ErrorPageData{
 		Theme:   getThemeClass(r),
 		Code:    code,
 		Message: message,
-		Details: details,
+		Details: details, // ex: 'ID invalide' ou 'Page inexistante'
 	}
 	_ = tmpl.Execute(w, data)
 }
 
+// ex pr la 404 qd la route est pas bonne
+func indexHandler(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" {
+		// jappel ma fct pr pas que le serv s'arrete
+		renderError(w, r, http.StatusNotFound, "Page non trouvée", "La page que vous recherchez n'existe pas.")
+		return
+	}
+	tmpl, _ := parseTemplate("templates/index.html")
+	data := PageData{Theme: getThemeClass(r), Data: nil}
+	_ = tmpl.Execute(w, data)
+}
+
+// 6) EVENEMENT INTERACTIF : qd on switch le theme ca fait une requete serveur
 func toggleThemeHandler(w http.ResponseWriter, r *http.Request) {
 	currentTheme := "light"
 	cookie, err := r.Cookie("theme")
@@ -121,72 +140,39 @@ func toggleThemeHandler(w http.ResponseWriter, r *http.Request) {
 		newTheme = "dark"
 	}
 
+	// jsave le choix ds un cookie pr que ca reste au refresh
 	http.SetCookie(w, &http.Cookie{
 		Name:  "theme",
 		Value: newTheme,
 		Path:  "/",
 	})
 
-	referer := r.Header.Get("Referer")
+	referer := r.Header.Get("Referer") // jrenvoie le gars d'ou il vient
 	if referer == "" {
 		referer = "/"
 	}
 	http.Redirect(w, r, referer, http.StatusSeeOther)
 }
 
-func indexHandler(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/" {
-		renderError(w, r, http.StatusNotFound, "Page non trouvée", "La page que vous recherchez n'existe pas.")
-		return
-	}
-
-	if r.Method != http.MethodGet {
-		renderError(w, r, http.StatusMethodNotAllowed, "Méthode non autorisée", "Seule la méthode GET est acceptée.")
-		return
-	}
-
-	tmpl, err := parseTemplate("templates/index.html")
-	if err != nil {
-		renderError(w, r, http.StatusInternalServerError, "Erreur serveur", "Impossible de charger la page.")
-		return
-	}
-
-	data := PageData{
-		Theme: getThemeClass(r),
-		Data:  nil,
-	}
-	_ = tmpl.Execute(w, data)
-}
-
+// 6) EVENEMENT INTERACTIF : filtrer les artistes = requete serveur GET
 func artistsHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		renderError(w, r, http.StatusMethodNotAllowed, "Méthode non autorisée", "Seule la méthode GET est acceptée.")
-		return
-	}
-
 	artists, err := FetchArtists()
 	if err != nil {
-		renderError(w, r, http.StatusInternalServerError, "Erreur serveur", "Impossible de récupérer les artistes depuis l'API.")
+		renderError(w, r, http.StatusInternalServerError, "Err serv", "API down ?")
 		return
 	}
 
-	// Filtres
+	// jrecup les params ds l'url (ex: ?min_year=2000)
 	minYear := r.URL.Query().Get("min_year")
 	maxYear := r.URL.Query().Get("max_year")
 	members := r.URL.Query().Get("members")
 	location := r.URL.Query().Get("location")
 
+	// le filtrage se fait cote serveur ds cette fct
 	filtered := filterArtists(artists, minYear, maxYear, members, location)
-
-	// Obtenir les statuts favoris
 	favoriteStatus := GetFavoriteStatus(r, filtered)
 
-	tmpl, err := parseTemplate("templates/artists.html")
-	if err != nil {
-		renderError(w, r, http.StatusInternalServerError, "Erreur serveur", "Impossible de charger la page.")
-		return
-	}
-
+	tmpl, _ := parseTemplate("templates/artists.html")
 	data := PageData{
 		Theme: getThemeClass(r),
 		Data: map[string]interface{}{
@@ -201,27 +187,28 @@ func artistsHandler(w http.ResponseWriter, r *http.Request) {
 	_ = tmpl.Execute(w, data)
 }
 
+// la fct qui gere tt le tri selon ce que luser a demander
 func filterArtists(artists []Artist, minYear, maxYear, members, location string) []Artist {
 	var filtered []Artist
 
 	for _, artist := range artists {
-		// Filtre année min
+		// --- FILTRE PAR INTERVALLE (ANNEE MIN/MAX) ---
+		// jconvertis le texte du form en chiffre pr comparer avec CreationDate
 		if minYear != "" {
 			min, err := strconv.Atoi(minYear)
 			if err == nil && artist.CreationDate < min {
-				continue
+				continue // si trop vieux -> jpasse au suivant
 			}
 		}
-
-		// Filtre année max
 		if maxYear != "" {
 			max, err := strconv.Atoi(maxYear)
 			if err == nil && artist.CreationDate > max {
-				continue
+				continue // si trop recent -> jpasse au suivant
 			}
 		}
 
-		// Filtre nombre de membres
+		// --- FILTRE SELECTION MULTIPLE (MEMBRES) ---
+		// on check la taille de l'array members pr voir si ca match
 		if members != "" {
 			memberCount, err := strconv.Atoi(members)
 			if err == nil && len(artist.Members) != memberCount {
@@ -229,11 +216,13 @@ func filterArtists(artists []Artist, minYear, maxYear, members, location string)
 			}
 		}
 
-		// Filtre par lieu
+		// --- COMBINAISON DES FILTRES ---
+		// le truc  c que si un seul filtre echoue, le 'continue' zappe lartiste
+		// du coup ca cumule les filtres automatiquement sans forcer
 		if location != "" {
 			locationLower := strings.ToLower(location)
 			hasLocation := false
-
+			// jsuis obliger daller chercher les details pr checker les villes de concert
 			detail, _ := FetchArtistDetail(artist.ID)
 			if detail != nil {
 				for loc := range detail.DatesLocations {
@@ -243,86 +232,58 @@ func filterArtists(artists []Artist, minYear, maxYear, members, location string)
 					}
 				}
 			}
-
 			if !hasLocation {
 				continue
 			}
 		}
 
+		// si il a survecu a tt les 'continue', jle garde
 		filtered = append(filtered, artist)
 	}
 
 	return filtered
 }
 
+// 6) EVENEMENT INTERACTIF : cliquer "voir details" -> requete /artist/{id}
 func artistDetailHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		renderError(w, r, http.StatusMethodNotAllowed, "Méthode non autorisée", "Seule la méthode GET est acceptée.")
-		return
-	}
-
 	path := strings.TrimPrefix(r.URL.Path, "/artist/")
 	id, err := strconv.Atoi(path)
 	if err != nil {
-		renderError(w, r, http.StatusBadRequest, "Paramètre invalide", "L'ID de l'artiste doit être un nombre.")
+		renderError(w, r, http.StatusBadRequest, "Err", "ID n'est pas un nombre")
 		return
 	}
 
-	artistDetail, err := FetchArtistDetail(id)
-	if err != nil {
-		renderError(w, r, http.StatusInternalServerError, "Erreur serveur", "Impossible de récupérer les détails de l'artiste.")
-		return
-	}
+	artistDetail, _ := FetchArtistDetail(id)
 	if artistDetail == nil {
-		renderError(w, r, http.StatusNotFound, "Artiste non trouvé", "Aucun artiste ne correspond à cet ID.")
+		renderError(w, r, http.StatusNotFound, "Pas la", "Artiste inconnu")
 		return
 	}
 
-	tmpl, err := parseTemplate("templates/artist_detail.html")
-	if err != nil {
-		renderError(w, r, http.StatusInternalServerError, "Erreur serveur", "Impossible de charger la page.")
-		return
-	}
-
-	data := PageData{
-		Theme: getThemeClass(r),
-		Data:  artistDetail,
-	}
-	_ = tmpl.Execute(w, data)
+	tmpl, _ := parseTemplate("templates/artist_detail.html")
+	_ = tmpl.Execute(w, PageData{Theme: getThemeClass(r), Data: artistDetail})
 }
 
+// systeme de recherche globale (nom, membres, lieux, dates)
 func searchHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		renderError(w, r, http.StatusMethodNotAllowed, "Méthode non autorisée", "Seule la méthode GET est acceptée.")
-		return
-	}
-
 	raw := strings.TrimSpace(r.URL.Query().Get("query"))
 	query := strings.ToLower(raw)
-
 	if query == "" {
 		http.Redirect(w, r, "/artists", http.StatusSeeOther)
 		return
 	}
 
-	allArtists, err := FetchArtists()
-	if err != nil {
-		renderError(w, r, http.StatusInternalServerError, "Erreur serveur", "Impossible de récupérer les artistes.")
-		return
-	}
-
+	allArtists, _ := FetchArtists()
 	var results []Artist
 	for _, artist := range allArtists {
-		// Recherche par nom
+		// si le nom match jle met direct
 		if strings.Contains(strings.ToLower(artist.Name), query) {
 			results = append(results, artist)
 			continue
 		}
-
-		// Recherche par membre
+		// jboucle sur les membres pr voir si un nom match
 		foundMember := false
-		for _, member := range artist.Members {
-			if strings.Contains(strings.ToLower(member), query) {
+		for _, m := range artist.Members {
+			if strings.Contains(strings.ToLower(m), query) {
 				results = append(results, artist)
 				foundMember = true
 				break
@@ -332,16 +293,16 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		// Recherche par lieu ou date
+		// check ds les concerts si la ville ou date match
 		detail, _ := FetchArtistDetail(artist.ID)
 		if detail != nil {
-			for location, dates := range detail.DatesLocations {
-				if strings.Contains(strings.ToLower(location), query) {
+			for loc, dates := range detail.DatesLocations {
+				if strings.Contains(strings.ToLower(loc), query) {
 					results = append(results, artist)
 					break
 				}
-				for _, date := range dates {
-					if strings.Contains(strings.ToLower(date), query) {
+				for _, d := range dates {
+					if strings.Contains(strings.ToLower(d), query) {
 						results = append(results, artist)
 						break
 					}
@@ -349,121 +310,57 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-
-	searchData := struct {
-		Query   string
-		Results []Artist
-		Count   int
-	}{
-		Query:   raw,
-		Results: results,
-		Count:   len(results),
-	}
-
-	tmpl, err := parseTemplate("templates/search.html")
-	if err != nil {
-		renderError(w, r, http.StatusInternalServerError, "Erreur serveur", "Impossible de charger la page.")
-		return
-	}
-
-	data := PageData{
-		Theme: getThemeClass(r),
-		Data:  searchData,
-	}
-	_ = tmpl.Execute(w, data)
+	tmpl, _ := parseTemplate("templates/search.html")
+	_ = tmpl.Execute(w, PageData{Theme: getThemeClass(r), Data: map[string]interface{}{"Query": raw, "Results": results, "Count": len(results)}})
 }
 
+// 6) EVENEMENT INTERACTIF : clic sur un lieu -> nouvelle page /location?loc=...
 func locationHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		renderError(w, r, http.StatusMethodNotAllowed, "Méthode non autorisée", "Seule la méthode GET est acceptée.")
-		return
-	}
-
 	locationQuery := r.URL.Query().Get("loc")
-	if locationQuery == "" {
-		renderError(w, r, http.StatusBadRequest, "Paramètre manquant", "Le lieu doit être spécifié.")
-		return
-	}
-
-	allArtists, err := FetchArtists()
-	if err != nil {
-		renderError(w, r, http.StatusInternalServerError, "Erreur serveur", "Impossible de récupérer les artistes.")
-		return
-	}
+	allArtists, _ := FetchArtists()
 
 	type ConcertInfo struct {
 		Artist Artist
 		Dates  []string
 	}
-
 	var concerts []ConcertInfo
 	locationLower := strings.ToLower(locationQuery)
 
+	// jrecherche tt les concerts de tt les artistes pr ce lieu precis
 	for _, artist := range allArtists {
 		detail, _ := FetchArtistDetail(artist.ID)
 		if detail != nil {
-			for location, dates := range detail.DatesLocations {
-				if strings.ToLower(location) == locationLower {
-					concerts = append(concerts, ConcertInfo{
-						Artist: artist,
-						Dates:  dates,
-					})
+			for loc, dates := range detail.DatesLocations {
+				if strings.ToLower(loc) == locationLower {
+					concerts = append(concerts, ConcertInfo{Artist: artist, Dates: dates})
 					break
 				}
 			}
 		}
 	}
-
-	tmpl, err := parseTemplate("templates/location.html")
-	if err != nil {
-		renderError(w, r, http.StatusInternalServerError, "Erreur serveur", "Impossible de charger la page.")
-		return
-	}
-
-	data := PageData{
-		Theme: getThemeClass(r),
-		Data: map[string]interface{}{
-			"Location": locationQuery,
-			"Concerts": concerts,
-			"Count":    len(concerts),
-		},
-	}
-	_ = tmpl.Execute(w, data)
+	tmpl, _ := parseTemplate("templates/location.html")
+	_ = tmpl.Execute(w, PageData{Theme: getThemeClass(r), Data: map[string]interface{}{"Location": locationQuery, "Concerts": concerts, "Count": len(concerts)}})
 }
 
 func main() {
+	// sert les fichiers css et js
 	fs := http.FileServer(http.Dir("static"))
 	http.Handle("/static/", http.StripPrefix("/static/", fs))
 
-	// Routes principales
+	// tt les routes du site
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/artists", artistsHandler)
 	http.HandleFunc("/artist/", artistDetailHandler)
 	http.HandleFunc("/search", searchHandler)
 	http.HandleFunc("/location", locationHandler)
 	http.HandleFunc("/toggle-theme", toggleThemeHandler)
-
-	// Routes bonus - Favoris
 	http.HandleFunc("/favorites", FavoritesHandler)
 	http.HandleFunc("/toggle-favorite", ToggleFavoriteHandler)
-
-	// Routes bonus - Comparaison
 	http.HandleFunc("/compare", CompareHandler)
 	http.HandleFunc("/compare-result", CompareResultHandler)
-
-	// Routes bonus - Cache
 	http.HandleFunc("/cache-info", CacheInfoHandler)
 	http.HandleFunc("/refresh-cache", RefreshCacheHandler)
 
-	println("🎸 Serveur démarré (version BONUS) sur http://localhost:8080")
-	println("")
-	println("✨ Fonctionnalités disponibles :")
-	println("   • Recherche avec suggestions JS")
-	println("   • Filtres avancés")
-	println("   • Favoris (cookies)")
-	println("   • Comparaison d'artistes")
-	println("   • Cache API avec rafraîchissement")
-	println("   • Mode sombre/clair")
-	println("")
+	println("Serveur demarrer sur http://localhost:8080")
 	_ = http.ListenAndServe(":8080", nil)
 }
