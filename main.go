@@ -127,7 +127,6 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	_ = tmpl.Execute(w, data)
 }
 
-// 6) EVENEMENT INTERACTIF : qd on switch le theme ca fait une requete serveur
 func toggleThemeHandler(w http.ResponseWriter, r *http.Request) {
 	currentTheme := "light"
 	cookie, err := r.Cookie("theme")
@@ -140,14 +139,13 @@ func toggleThemeHandler(w http.ResponseWriter, r *http.Request) {
 		newTheme = "dark"
 	}
 
-	// jsave le choix ds un cookie pr que ca reste au refresh
 	http.SetCookie(w, &http.Cookie{
 		Name:  "theme",
 		Value: newTheme,
 		Path:  "/",
 	})
 
-	referer := r.Header.Get("Referer") // jrenvoie le gars d'ou il vient
+	referer := r.Header.Get("Referer")
 	if referer == "" {
 		referer = "/"
 	}
