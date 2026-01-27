@@ -1,269 +1,346 @@
-(() => {
-    "use strict";
+// Système de suggestions pour la recherche
+(function() {
+    'use strict';
 
-    // reglages de base (si ya trop d'resultats c moche)
-    const MIN_CHARS = 2;
-    const MAX_RESULTS = 8;
-    const DEBOUNCE_MS = 150;
+    // Configuration
+    const MIN_CHARS = 2;        // Min 2 car pour chercher
+    const MAX_RESULTS = 8;      // Max 8 suggestion
+    const DEBOUNCE_MS = 200;    // Attendre 200ms après la derniere frappe
+    const API_URL = 'https://groupietrackers.herokuapp.com/api/artists';
 
-    // les liens pr chercher les noms dartistes sur le serv
-    const SUGGEST_ENDPOINTS = [
-        (q) => `/suggest?q=${encodeURIComponent(q)}`,
-        (q) => `/api/suggest?q=${encodeURIComponent(q)}`,
-        (q) => `/suggestions?q=${encodeURIComponent(q)}`
-    ];
+    // Cache des donnee
+    let allArtists = [];
+    let suggestionsCache = [];
 
-    // Jutilise un debounce : jattends ~150 ms apres la derniere frappe
-    // Ca evite de spammer et ca ameliore les perfs du site direct
-    const debounce = (fn, ms) => {
-        let t;
-        return (...args) => {
-            clearTimeout(t);
-            t = setTimeout(() => fn(...args), ms);
+    // Fonction debounce pour optimiser les performances
+    function debounce(fn, delay) {
+        let timeout;
+        return function(...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => fn.apply(this, args), delay);
         };
-    };
+    }
 
-    // pr clean le texte (vire les accents + minuscule)
-    const normalize = (s) =>
-        String(s || "")
+    // Normaliser le texte (minuscules, sans accents)
+    function normalize(text) {
+        return String(text || '')
             .toLowerCase()
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
             .trim();
+    }
 
-    const uniq = (arr) => Array.from(new Set(arr.filter(Boolean)));
+    // Charger les artistes depuis l'API au démarrage
+    async function loadArtists() {
+        try {
+            console.log('🎸 Chargement des artistes...');
+            const response = await fetch(API_URL);
 
-    // la je trie ce que le serv me renvoie pr pas avoir d'bugs
-    const parseSuggestPayload = (data) => {
-        if (!data) return [];
-        if (Array.isArray(data)) {
-            if (typeof data[0] === "string") return data;
-            return data
-                .map((x) => x?.name || x?.Name || x?.title || x?.Title || "")
-                .filter(Boolean);
-        }
-        const list =
-            data.results || data.Results || data.items || data.Items || data.suggestions || data.Suggestions || [];
-        if (Array.isArray(list)) return parseSuggestPayload(list);
-        return [];
-    };
-
-    // Je recupere les noms dartistes deja presents ds la page (h1, h2, etc)
-    const collectLocalArtistNames = () => {
-        const names = [];
-        document.querySelectorAll(".artist-name").forEach((el) => {
-            const t = el.textContent?.trim();
-            if (t) names.push(t);
-        });
-        document.querySelectorAll("select option").forEach((opt) => {
-            const txt = opt.textContent?.trim();
-            if (txt && !txt.startsWith("--")) {
-                const cleaned = txt.replace(/\s*\(\d{4}\)\s*$/, "").trim();
-                if (cleaned) names.push(cleaned);
+            if (!response.ok) {
+                console.error('Erreur API:', response.status);
+                return;
             }
-        });
-        document.querySelectorAll("h1, h2").forEach((h) => {
-            const t = h.textContent?.trim();
-            if (t && t.length <= 40 && !/nos artistes|résultats|compar/i.test(normalize(t))) {
-                names.push(t);
-            }
-        });
-        return uniq(names);
-    };
 
-    // fct pr aller chercher les suggestions sur le web (fetch)
-    const tryFetchSuggestions = async (query) => {
-        for (const makeUrl of SUGGEST_ENDPOINTS) {
-            const url = makeUrl(query);
-            try {
-                const res = await fetch(url, { headers: { "Accept": "application/json" } });
-                if (!res.ok) continue;
-                const ct = res.headers.get("content-type") || "";
-                if (!ct.includes("application/json")) continue;
-                const json = await res.json();
-                const parsed = parseSuggestPayload(json);
-                if (parsed.length) return parsed;
-            } catch { }
+            allArtists = await response.json();
+            buildSuggestionsCache();
+            console.log(' Artistes chargés:', allArtists.length);
+        } catch (error) {
+            console.error('Erreur chargement artistes:', error);
         }
-        return null;
-    };
+    }
 
-    // Je filtre ceux qui commencent par ou contiennent le texte (local)
-    const localSuggest = (query, localList) => {
-        const qn = normalize(query);
-        if (!qn) return [];
+    // Construire le cache de suggestions
+    function buildSuggestionsCache() {
+        suggestionsCache = [];
+
+        allArtists.forEach(artist => {
+            // Ajouter le nom de l'artiste
+            suggestionsCache.push({
+                type: 'artist',
+                value: artist.name,
+                id: artist.id,
+                image: artist.image,
+                year: artist.creationDate
+            });
+
+            // Ajouter les membres
+            if (artist.members && Array.isArray(artist.members)) {
+                artist.members.forEach(member => {
+                    suggestionsCache.push({
+                        type: 'member',
+                        value: member,
+                        id: artist.id,
+                        artistName: artist.name,
+                        image: artist.image
+                    });
+                });
+            }
+
+            // Ajouter l'année
+            suggestionsCache.push({
+                type: 'year',
+                value: String(artist.creationDate),
+                id: artist.id,
+                artistName: artist.name,
+                image: artist.image
+            });
+        });
+
+        console.log('✅ Cache construit:', suggestionsCache.length, 'entrées');
+    }
+
+    // Filtrer les suggestions selon la requête
+    function filterSuggestions(query) {
+        if (!query || query.length < MIN_CHARS) {
+            return [];
+        }
+
+        const normalizedQuery = normalize(query);
+        const results = [];
+        const seen = new Set();
+
+        // Trier par priorité commence par > contient
         const starts = [];
-        const includes = [];
-        for (const name of localList) {
-            const nn = normalize(name);
-            if (!nn) continue;
-            if (nn.startsWith(qn)) starts.push(name);
-            else if (nn.includes(qn)) includes.push(name);
-        }
-        return [...starts, ...includes].slice(0, MAX_RESULTS);
-    };
+        const contains = [];
 
-    // Je cree une ptite box en HTML juste en dessous de la barre
-    const ensureDropdown = (input) => {
-        const wrap = document.createElement("div");
-        wrap.className = "suggestions-wrap";
-        wrap.style.position = "relative";
-        wrap.style.width = "100%";
+        suggestionsCache.forEach(item => {
+            const normalizedValue = normalize(item.value);
+
+            if (normalizedValue.startsWith(normalizedQuery)) {
+                starts.push(item);
+            } else if (normalizedValue.includes(normalizedQuery)) {
+                contains.push(item);
+            }
+        });
+
+        // Combiner et éviter les doublons
+        [...starts, ...contains].forEach(item => {
+            const key = `${item.type}-${item.id}-${item.value}`;
+            if (!seen.has(key) && results.length < MAX_RESULTS) {
+                seen.add(key);
+                results.push(item);
+            }
+        });
+
+        return results;
+    }
+
+    // Créer le conteneur de suggestions
+    function createSuggestionsBox(input) {
+        // Wrapper pour position relative
+        const wrapper = document.createElement('div');
+        wrapper.className = 'suggestions-wrapper';
+        wrapper.style.position = 'relative';
+        wrapper.style.width = '100%';
 
         const parent = input.parentElement;
-        parent.insertBefore(wrap, input);
-        wrap.appendChild(input);
+        parent.insertBefore(wrapper, input);
+        wrapper.appendChild(input);
 
-        // J'affiche un dropdown sous l'input direct
-        const box = document.createElement("div");
-        box.className = "suggestions-box";
-        box.style.position = "absolute";
-        box.style.left = "0";
-        box.style.right = "0";
-        box.style.top = "calc(100% + 8px)";
-        box.style.zIndex = "9999";
-        box.style.borderRadius = "14px";
-        box.style.overflow = "hidden";
-        box.style.display = "none";
-        box.style.background = "var(--bg-secondary, #fff)";
-        box.style.border = "1px solid var(--border-color, rgba(0,0,0,0.12))";
-        box.style.boxShadow = "0 10px 30px rgba(0,0,0,0.15)";
+        // Box de suggestions
+        const box = document.createElement('div');
+        box.className = 'suggestions-box';
+        box.style.cssText = `
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: calc(100% + 8px);
+            z-index: 9999;
+            background: var(--bg-secondary, #fff);
+            border: 1px solid var(--border-color, rgba(0,0,0,0.1));
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+        `;
 
-        wrap.appendChild(box);
+        wrapper.appendChild(box);
         return box;
-    };
+    }
 
-    const hideBox = (box) => {
-        box.style.display = "none";
-        box.innerHTML = "";
-    };
-
-    // Je genere une liste de suggestions ds le HTML (boucle)
-    const renderBox = (box, input, items) => {
-        if (!items || !items.length) {
-            hideBox(box);
+    // Afficher les suggestions
+    function showSuggestions(box, input, suggestions) {
+        if (!suggestions || suggestions.length === 0) {
+            box.style.display = 'none';
             return;
         }
 
-        box.innerHTML = "";
-        items.forEach((txt, idx) => {
-            const row = document.createElement("button");
-            row.type = "button";
-            row.className = "suggestion-item";
-            row.textContent = txt;
-            row.style.width = "100%";
-            row.style.textAlign = "left";
-            row.style.padding = "12px 14px";
-            row.style.border = "0";
-            row.style.background = "transparent";
-            row.style.cursor = "pointer";
-            row.style.color = "var(--text-primary, #111)";
+        box.innerHTML = '';
 
-            row.addEventListener("mouseenter", () => {
-                row.style.background = "var(--bg-primary, rgba(0,0,0,0.05))";
+        suggestions.forEach((item, index) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'suggestion-item';
+            button.style.cssText = `
+                width: 100%;
+                padding: 12px 16px;
+                border: none;
+                background: transparent;
+                text-align: left;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                color: var(--text-primary, #111);
+                transition: background 0.2s;
+            `;
+
+            // Image (si disponible)
+            if (item.image) {
+                const img = document.createElement('img');
+                img.src = item.image;
+                img.style.cssText = `
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 8px;
+                    object-fit: cover;
+                `;
+                button.appendChild(img);
+            }
+
+            // Texte
+            const textDiv = document.createElement('div');
+            textDiv.style.flex = '1';
+
+            const mainText = document.createElement('div');
+            mainText.textContent = item.value;
+            mainText.style.fontWeight = '500';
+            textDiv.appendChild(mainText);
+
+            // Sous-texte selon le type
+            if (item.type === 'member' && item.artistName) {
+                const subText = document.createElement('div');
+                subText.textContent = `Membre de ${item.artistName}`;
+                subText.style.cssText = `
+                    font-size: 0.85em;
+                    color: var(--text-secondary, #666);
+                    margin-top: 2px;
+                `;
+                textDiv.appendChild(subText);
+            } else if (item.type === 'year' && item.artistName) {
+                const subText = document.createElement('div');
+                subText.textContent = `${item.artistName} - Créé en ${item.value}`;
+                subText.style.cssText = `
+                    font-size: 0.85em;
+                    color: var(--text-secondary, #666);
+                    margin-top: 2px;
+                `;
+                textDiv.appendChild(subText);
+            } else if (item.type === 'artist' && item.year) {
+                const subText = document.createElement('div');
+                subText.textContent = `Groupe créé en ${item.year}`;
+                subText.style.cssText = `
+                    font-size: 0.85em;
+                    color: var(--text-secondary, #666);
+                    margin-top: 2px;
+                `;
+                textDiv.appendChild(subText);
+            }
+
+            button.appendChild(textDiv);
+
+            // Hover effect
+            button.addEventListener('mouseenter', () => {
+                button.style.background = 'var(--bg-primary, rgba(0,0,0,0.05))';
             });
-            row.addEventListener("mouseleave", () => {
-                row.style.background = "transparent";
+            button.addEventListener('mouseleave', () => {
+                button.style.background = 'transparent';
             });
 
-            // Qd on clique une suggestion, je remplis linput et je lance la rech
-            row.addEventListener("click", () => {
-                input.value = txt;
-                hideBox(box);
-                const form = input.closest("form");
-                if (form) form.submit();
+            // Click sur la suggestion
+            button.addEventListener('click', () => {
+                input.value = item.value;
+                box.style.display = 'none';
+
+                // Soumettre le formulaire
+                const form = input.closest('form');
+                if (form) {
+                    form.submit();
+                }
             });
 
-            box.appendChild(row);
+            box.appendChild(button);
 
-            if (idx !== items.length - 1) {
-                const sep = document.createElement("div");
-                sep.style.height = "1px";
-                sep.style.background = "var(--border-color, rgba(0,0,0,0.08))";
-                box.appendChild(sep);
+            // Séparateur (sauf pour le dernier)
+            if (index < suggestions.length - 1) {
+                const separator = document.createElement('div');
+                separator.style.cssText = `
+                    height: 1px;
+                    background: var(--border-color, rgba(0,0,0,0.08));
+                    margin: 0;
+                `;
+                box.appendChild(separator);
             }
         });
 
-        box.style.display = "block";
-    };
+        box.style.display = 'block';
+    }
 
-    // --- DEBUT DU SCRIPT ---
-    document.addEventListener("DOMContentLoaded", () => {
-        // Dans suggestions.js, je met un listener sur linput .search-input
-        const inputs = Array.from(document.querySelectorAll("input.search-input"));
-        if (!inputs.length) return;
+    // Cacher les suggestions
+    function hideSuggestions(box) {
+        box.style.display = 'none';
+    }
 
-        const localNames = collectLocalArtistNames();
+    // Initialiser les suggestions sur un input
+    function initSuggestionsForInput(input) {
+        const box = createSuggestionsBox(input);
 
-        for (const input of inputs) {
-            const box = ensureDropdown(input);
+        // Fonction de mise à jour avec debounce
+        const updateSuggestions = debounce(() => {
+            const query = input.value.trim();
 
-            // A chaque frappe, je recupere la valeur (avec le debounce)
-            // Je lance pas une requete a chaque lettre sinon ca lag !
-            const update = debounce(async () => {
-                const q = input.value.trim();
-                if (q.length < MIN_CHARS) return hideBox(box);
+            if (query.length < MIN_CHARS) {
+                hideSuggestions(box);
+                return;
+            }
 
-                // Je cherche dabord sur le serv, sinon je prend ma liste locale
-                const server = await tryFetchSuggestions(q);
-                if (server && server.length) {
-                    renderBox(box, input, uniq(server).slice(0, MAX_RESULTS));
-                    return;
-                }
+            const suggestions = filterSuggestions(query);
+            showSuggestions(box, input, suggestions);
+        }, DEBOUNCE_MS);
 
-                const local = localSuggest(q, localNames);
-                renderBox(box, input, local);
-            }, DEBOUNCE_MS);
+        // Event listeners
+        input.addEventListener('input', updateSuggestions);
 
-            // J'ecoute ce que lutilisateur tape
-            input.addEventListener("input", update);
+        input.addEventListener('focus', () => {
+            if (input.value.trim().length >= MIN_CHARS) {
+                updateSuggestions();
+            }
+        });
 
-            // Si on reclique ds la barre on raffiche les suggestions
-            input.addEventListener("focus", () => {
-                if (input.value.trim().length >= MIN_CHARS) update();
-            });
+        // Cacher au clic extérieur
+        document.addEventListener('click', (e) => {
+            if (!input.contains(e.target) && !box.contains(e.target)) {
+                hideSuggestions(box);
+            }
+        });
 
-            // Gestion des touches (haut, bas, enter)
-            input.addEventListener("keydown", (e) => {
-                if (box.style.display === "none") return;
-                const buttons = Array.from(box.querySelectorAll("button.suggestion-item"));
-                if (!buttons.length) return;
-                const active = box.querySelector("button.suggestion-item[data-active='1']");
-                let idx = active ? buttons.indexOf(active) : -1;
+        // Cacher au blur (avec délai pour permettre le clic)
+        input.addEventListener('blur', () => {
+            setTimeout(() => hideSuggestions(box), 200);
+        });
+    }
 
-                if (e.key === "ArrowDown") {
-                    e.preventDefault();
-                    idx = Math.min(idx + 1, buttons.length - 1);
-                } else if (e.key === "ArrowUp") {
-                    e.preventDefault();
-                    idx = Math.max(idx - 1, 0);
-                } else if (e.key === "Enter") {
-                    if (active) {
-                        e.preventDefault();
-                        active.click();
-                    }
-                    return;
-                } else if (e.key === "Escape") {
-                    hideBox(box);
-                    return;
-                } else { return; }
+    // Initialisation au chargement de la page
+    document.addEventListener('DOMContentLoaded', async () => {
+        console.log('🎸 Initialisation des suggestions...');
 
-                buttons.forEach((b) => b.removeAttribute("data-active"));
-                const next = buttons[idx];
-                next.setAttribute("data-active", "1");
-                next.style.background = "var(--bg-primary, rgba(0,0,0,0.05))";
-                next.scrollIntoView({ block: "nearest" });
-                buttons.forEach((b, i) => { if (i !== idx) b.style.background = "transparent"; });
-            });
+        // Charger les artistes d'abord
+        await loadArtists();
 
-            // Fermer la box si on clique a coter (important ca)
-            document.addEventListener("click", (e) => {
-                if (!box.contains(e.target) && e.target !== input) hideBox(box);
-            });
+        // Trouver tous les inputs de recherche
+        const searchInputs = document.querySelectorAll('input.search-input');
 
-            input.addEventListener("blur", () => {
-                setTimeout(() => hideBox(box), 150);
-            });
+        if (searchInputs.length === 0) {
+            console.log('Aucun input .search-input trouvé');
+            return;
         }
+
+        console.log(`✅ ${searchInputs.length} input(s) trouvé(s)`);
+
+        // Initialiser les suggestions pour chaque input
+        searchInputs.forEach(input => {
+            initSuggestionsForInput(input);
+        });
     });
 })();
